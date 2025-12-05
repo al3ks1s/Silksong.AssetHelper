@@ -1,8 +1,6 @@
 ﻿using BepInEx.Logging;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -16,7 +14,8 @@ public static class AssetUtil
 {
     private static readonly ManualLogSource Log = Logger.CreateLogSource(nameof(AssetUtil));
 
-    public static T? LoadAsset<T>(string bundleName, string name, List<string>? extraDependencies = null)
+    // TODO - rewrite this method to be a coroutine
+    public static LoadedAsset<T>? LoadAsset<T>(string bundleName, string name, List<string>? extraDependencies = null)
     where T : UObject
     {
         if (Data.BundleKeys is null)
@@ -63,6 +62,8 @@ public static class AssetUtil
         }
 
         T loaded = bundle.LoadAsset<T>(objName);
-        return loaded;
+
+        LoadedAsset<T> wrapped = new(loaded, [ /* TODO - include extra bundles */ bundle]);
+        return wrapped;
     }
 }
