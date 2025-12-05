@@ -1,4 +1,6 @@
 ﻿using BepInEx.Logging;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -14,56 +16,58 @@ public static class AssetUtil
 {
     private static readonly ManualLogSource Log = Logger.CreateLogSource(nameof(AssetUtil));
 
-    // TODO - rewrite this method to be a coroutine
-    public static LoadedAsset<T>? LoadAsset<T>(string bundleName, string name, List<string>? extraDependencies = null)
-    where T : UObject
+    /// <summary>
+    /// Load the specified asset from the specified asset bundle.
+    /// </summary>
+    /// <typeparam name="T">The type of the asset to be loaded.</typeparam>
+    /// <param name="bundleName">The name of the .bundle file containing the asset.</param>
+    /// <param name="assetName">The name of the asset within the file.</param>
+    /// <param name="onLoaded"></param>
+    /// <param name="extraDependencies"></param>
+    /// <returns></returns>
+    public static IEnumerator LoadAsset<T>(
+        string bundleName,
+        string assetName,
+        Action<LoadedAsset<T>> onLoaded,
+        List<string>? extraDependencies = null
+        )
+        where T : UObject
     {
         if (Data.BundleKeys is null)
         {
-            Log.LogWarning($"Cannot load asset {name} from {bundleName}: too early");
-            return default;
+            Log.LogError($"Cannot load asset {assetName} from {bundleName}: too early.");
+            yield break;
         }
 
         extraDependencies ??= [];
 
-        List<AsyncOperationHandle<IAssetBundleResource>> loadedDependencies = [];
-        foreach (string extraBundle in extraDependencies)
-        {
-            if (!Data.BundleKeys.TryGetValue(extraBundle, out string extraBundleKey))
-            {
-                Log.LogWarning($"Skipping extra dependency {extraBundle}: Key not found");
-                continue;
-            }
+        List<string> allBundles = [bundleName, .. extraDependencies];
 
-            loadedDependencies.Add(
-                Addressables.LoadAssetAsync<IAssetBundleResource>(extraBundleKey)
-                );
-        }
+        AsyncOperationHandle<IList<IAssetBundleResource>> opHandle =
+            Addressables.LoadAssetsAsync<IAssetBundleResource>(allBundles, null, Addressables.MergeMode.Union);
 
-        AsyncOperationHandle<IAssetBundleResource> bundleLoadOp = Addressables.LoadAssetAsync<IAssetBundleResource>(
-            Data.BundleKeys[bundleName]);
+        yield return opHandle;
 
-        foreach (AsyncOperationHandle<IAssetBundleResource> op in loadedDependencies)
-        {
-            op.WaitForCompletion();
-        }
-
-        IAssetBundleResource resource = bundleLoadOp.WaitForCompletion();
+        IAssetBundleResource resource = opHandle.Result[0];
 
         AssetBundle bundle = resource.GetAssetBundle();
 
-        string objName = bundle.GetAllAssetNames().FirstOrDefault(x => x.Contains(name));
+        string objName = bundle.GetAllAssetNames().FirstOrDefault(x => x.Contains(assetName));
         if (objName == null)
         {
-            Log.LogError($"Could not find name {name} in bundle {bundleName}");
+            Log.LogError($"Could not find name {assetName} in bundle {bundleName}");
             Log.LogError("Available names:\n" + string.Join(", ", bundle.GetAllAssetNames().ToArray()));
 
-            return default;
+            yield break;
         }
+
+        Log.LogInfo($"Loading asset {objName} from bundle {bundleName}");
 
         T loaded = bundle.LoadAsset<T>(objName);
 
-        LoadedAsset<T> wrapped = new(loaded, [ /* TODO - include extra bundles */ bundle]);
-        return wrapped;
+        LoadedAsset<T> wrapped = new(loaded, opHandle);
+        onLoaded?.Invoke(wrapped);
+
+        yield break;
     }
 }

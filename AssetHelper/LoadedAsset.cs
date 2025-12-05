@@ -1,8 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UObject = UnityEngine.Object;
+using AssetBundleLoadHandle = UnityEngine.ResourceManagement.AsyncOperations
+    .AsyncOperationHandle<
+        System.Collections.Generic.IList<
+            UnityEngine.ResourceManagement.ResourceProviders.IAssetBundleResource
+            >
+        >;
 
 namespace Silksong.AssetHelper;
 
@@ -13,10 +17,10 @@ namespace Silksong.AssetHelper;
 public class LoadedAsset<T> : IDisposable
     where T : UObject
 {
-    internal LoadedAsset(T asset, IList<AssetBundle> bundles)
+    internal LoadedAsset(T asset, AssetBundleLoadHandle bundleHandle)
     {
         _asset = asset;
-        _loadedBundles = [.. bundles];
+        _bundleHandle = bundleHandle;
     }
 
     /// <summary>
@@ -25,7 +29,7 @@ public class LoadedAsset<T> : IDisposable
     public T Asset => _asset;
 
     private readonly T _asset;
-    private readonly AssetBundle[] _loadedBundles;
+    private readonly AssetBundleLoadHandle _bundleHandle;
 
     /// <summary>
     /// Release the Asset Bundles used to load this asset.
@@ -36,10 +40,7 @@ public class LoadedAsset<T> : IDisposable
     /// </summary>
     public void Dispose()
     {
-        foreach (AssetBundle bundle in _loadedBundles)
-        {
-            Addressables.Release(bundle);
-        }
+        Addressables.Release(_bundleHandle);
         GC.SuppressFinalize(this);
     }
 }
