@@ -25,7 +25,8 @@ able to do the same.
 Notably all "Global assets" fit into this category, but they're easier to get through other methods so we
 consider them as separate.
 
-See <xref:assetbundleassets> for info on loading assetbundle assets.
+See <xref:assetbundleassets> for info on loading assetbundle assets. A list of all assets loadable
+in this way is given at @"Silksong.AssetHelper.Dev.DebugTools.DumpAllAssetNames".
 
 The third type repesents assets which are contained in asset bundles that are in the scenes_scenes_scenes
 subdirectory. This covers assets which appear in specific scenes when entering (rather than being spawned);
