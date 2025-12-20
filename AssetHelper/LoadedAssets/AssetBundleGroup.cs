@@ -1,4 +1,6 @@
-﻿using Silksong.AssetHelper.Util;
+﻿using BepInEx.Logging;
+using Silksong.AssetHelper.Util;
+using Steamworks;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -19,7 +21,42 @@ namespace Silksong.AssetHelper.LoadedAssets;
 /// and subsequent keys represent dependencies.</param>
 public class AssetBundleGroup(List<string> bundleNames)
 {
+    private static readonly ManualLogSource Log = Logger.CreateLogSource(nameof(AssetBundleGroup));
+
     private readonly List<string> _bundleNames = bundleNames;
+
+    private List<string>? _bundleKeys;
+
+    /// <summary>
+    /// The Addressables keys for the bundles in this group.
+    /// </summary>
+    public List<string> BundleKeys
+    {
+        get
+        {
+            if (_bundleKeys != null) return _bundleKeys;
+
+            List<string> keys = [];
+            bool failure = false;
+            foreach (string name in _bundleNames)
+            {
+                string key = AssetsData.ToBundleKey(name);
+                if (key == null)
+                {
+                    failure = true;
+                    Log.LogError($"Could not determine bundle key: {name}");
+                }
+            }
+
+            if (failure)
+            {
+                throw new Exception("Could not determine all bundle keys");
+            }
+
+            _bundleKeys = keys;
+            return _bundleKeys;
+        }
+    }
 
     /// <summary>
     /// Whether the bundle group has been loaded.
@@ -71,10 +108,8 @@ public class AssetBundleGroup(List<string> bundleNames)
             return;
         }
 
-        List<string> bundleKeys = [.. _bundleNames.Select(x => AssetsData.ToBundleKey(x))];
-
         _opHandle = Addressables.LoadAssetsAsync<IAssetBundleResource>(
-            bundleKeys, null, Addressables.MergeMode.Union);
+            BundleKeys, null, Addressables.MergeMode.Union);
         _opHandle.Value.Completed += _ =>
         {
             Loaded = true;
@@ -95,7 +130,7 @@ public class AssetBundleGroup(List<string> bundleNames)
         }
 
         _opHandle = Addressables.LoadAssetsAsync<IAssetBundleResource>(
-            _bundleNames, null, Addressables.MergeMode.Union);
+            BundleKeys, null, Addressables.MergeMode.Union);
 
         yield return _opHandle;
         Loaded = true;
@@ -113,7 +148,7 @@ public class AssetBundleGroup(List<string> bundleNames)
         }
 
         _opHandle = Addressables.LoadAssetsAsync<IAssetBundleResource>(
-            _bundleNames, null, Addressables.MergeMode.Union);
+            BundleKeys, null, Addressables.MergeMode.Union);
         _opHandle.Value.WaitForCompletion();
 
         Loaded = true;

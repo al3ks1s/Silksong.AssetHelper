@@ -116,6 +116,8 @@ public static class AssetsData
     /// </summary>
     public static string ToBundleKey(string name)
     {
+        // TODO - return null if keys can't be decoded
+
         if (_bundleKeys == null)
         {
             Log.LogWarning($"{nameof(ToBundleKey)} called before addressables loaded");
