@@ -20,7 +20,7 @@ public static class LoadableAssetExtensions
 
         if (!manualLoad)
         {
-            GameEvents.OnEnterGame += () => asset.Load();
+            GameEvents.OnEnterGame += asset.DoLoad;
 
             if (GameEvents.IsInGame)
             {

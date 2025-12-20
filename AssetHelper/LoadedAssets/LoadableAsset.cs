@@ -114,6 +114,8 @@ public class LoadableAsset<T> where T : UObject
         _toInvokeWhenLoaded.Clear();
     }
 
+    internal void DoLoad() => Load();
+
     /// <summary>
     /// Load the underlying bundles.
     /// </summary>
