@@ -1,7 +1,6 @@
 ﻿using BepInEx.Logging;
 using Silksong.AssetHelper.BundleTools;
 using Silksong.AssetHelper.Util;
-using Steamworks;
 using System;
 using System.Collections;
 using System.Collections.Generic;
