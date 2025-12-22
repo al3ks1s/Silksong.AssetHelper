@@ -13,6 +13,8 @@ namespace Silksong.AssetHelper.LoadedAssets;
 
 /// <summary>
 /// Class representing an asset loadable from an asset bundle with Addressables.
+/// 
+/// The asset will be automatically unloaded when quitting to menu.
 /// </summary>
 /// <typeparam name="T">The type of the asset.</typeparam>
 public class LoadableAsset<T> where T : UObject
@@ -66,7 +68,16 @@ public class LoadableAsset<T> where T : UObject
     {
         _assetName = assetName;
         _bundleGroup = bundleGroup;
+
+        GameEvents.OnQuitToMenu += Unload;
     }
+
+    /// <summary>
+    /// Instantiate a loadable asset. Dependent bundles will be automatically determined.
+    /// </summary>
+    /// <param name="assetName">The name of the asset.</param>
+    /// <param name="mainBundle">The bundle containing the asset.</param>
+    public LoadableAsset(string assetName, string mainBundle) : this(assetName, AssetBundleGroup.CreateWithDependencies(mainBundle)) { }
 
     /// <summary>
     /// Whether the underlying bundles have been loaded.
