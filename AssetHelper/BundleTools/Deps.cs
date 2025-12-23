@@ -14,15 +14,9 @@ public static class Deps
 {
     internal static void Setup()
     {
-        BundleFolder = GetBundleFolder();
         CabLookup = CacheManager.GetCached(GenerateCabLookup, "cabs.json");
         DirectDependencyLookup = new("direct_deps.json");
     }
-
-    /// <summary>
-    /// The folder containing asset bundles.
-    /// </summary>
-    public static string BundleFolder { get; private set; } = null!;
     
     /// <summary>
     /// Lookup for bundle name to cab name.
@@ -31,24 +25,11 @@ public static class Deps
 
     private static CachedObject<Dictionary<string, List<string>>> DirectDependencyLookup { get; set; } = null!;
 
-    private static string GetBundleFolder()
-    {
-        string rootFolder = Application.streamingAssetsPath;
-        string osFolder = Application.platform switch
-        {
-            RuntimePlatform.WindowsPlayer => "StandaloneWindows64",
-            RuntimePlatform.OSXPlayer => "StandaloneOSX",
-            RuntimePlatform.LinuxPlayer => "StandaloneLinux64",
-            _ => ""
-        };
-        return Path.Combine(rootFolder, "aa", osFolder);
-    }
-
     private static Dictionary<string, string> GenerateCabLookup()
     {
         AssetsManager mgr = new();
 
-        string bundleFolder = BundleFolder;
+        string bundleFolder = AssetPaths.BundleFolder;
 
         Dictionary<string, string> lookup = [];
 
@@ -84,7 +65,7 @@ public static class Deps
 
         AssetsManager mgr = new();
 
-        BundleFileInstance bun = mgr.LoadBundleFile(Path.Combine(BundleFolder, bundleFile));
+        BundleFileInstance bun = mgr.LoadBundleFile(Path.Combine(AssetPaths.BundleFolder, bundleFile));
         AssetsFileInstance afileInst = mgr.LoadAssetsFileFromBundle(bun, 0, false);
         AssetsFile afile = afileInst.file;
         AssetFileInfo assetInfos = afile.GetAssetsOfType(AssetClassID.AssetBundle)[0];

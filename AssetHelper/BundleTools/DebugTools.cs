@@ -20,8 +20,6 @@ public static class DebugTools
 {
     private static readonly ManualLogSource Log = Logger.CreateLogSource($"AssetHelper.{nameof(DebugTools)}");
 
-    private static DirectoryInfo AssemblyFolder => Directory.GetParent(typeof(DebugTools).Assembly.Location);
-
     /// <summary>
     /// Dump all addressable keys to the bundle_keys.json file next to this assembly.
     /// 
@@ -29,7 +27,7 @@ public static class DebugTools
     /// </summary>
     public static void DumpAddressablesKeys()
     {
-        string dumpFile = Path.Combine(AssemblyFolder.FullName, "bundle_keys.json");
+        string dumpFile = Path.Combine(AssetPaths.AssemblyFolder, "bundle_keys.json");
 
         AssetsData.InvokeAfterAddressablesLoaded(() => AssetsData.BundleKeys.SerializeToFileInBackground(dumpFile));
     }
@@ -46,7 +44,7 @@ public static class DebugTools
 
     private static void DumpAllAssetNamesInternal()
     {
-        string dumpFile = Path.Combine(AssemblyFolder.FullName, "asset_names.json");
+        string dumpFile = Path.Combine(AssetPaths.AssemblyFolder, "asset_names.json");
 
         NameListLookup assetNames = [];
         NameListLookup sceneNames = [];

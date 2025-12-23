@@ -1,8 +1,6 @@
-﻿using BepInEx;
-using BepInEx.Logging;
+﻿using BepInEx.Logging;
 using System;
 using System.IO;
-using System.Reflection;
 
 namespace Silksong.AssetHelper.Internal;
 
@@ -10,47 +8,11 @@ internal static class CacheManager
 {
     private static readonly ManualLogSource Log = Logger.CreateLogSource($"{nameof(AssetHelper)}.{nameof(CacheManager)}");
 
-    // Use reflection to get the non-constant value of a constant field
-    private static string GetSilksongVersion() => typeof(Constants)
-        .GetField(nameof(Constants.GAME_VERSION), BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)
-        ?.GetRawConstantValue()
-        as string
-        ?? "UNKNOWN";
-
-
-    private static string? _cacheDirectory = null;
-
-    /// <summary>
-    /// Directory storing cached information for this version of Silksong.
-    /// </summary>
-    public static string CacheDirectory
-    {
-        get
-        {
-            if (_cacheDirectory is not null) return _cacheDirectory;
-            
-            string silksongVersion = GetSilksongVersion();
-            string dir = Path.Combine(
-                Paths.CachePath,
-#if DEBUG
-                $"{nameof(AssetHelper)}_DEBUG",
-#else
-                nameof(AssetHelper),
-#endif
-                $"v{silksongVersion}");
-
-            Directory.CreateDirectory(dir);
-
-            _cacheDirectory = dir;
-            return dir;
-        }
-    }
-
     // TODO - only recalculate if major/minor version changes
 
     public static void WriteObj<T>(T obj, string filename) where T : class
     {
-        string filePath = Path.Combine(CacheDirectory, filename);
+        string filePath = Path.Combine(AssetPaths.CacheDirectory, filename);
 
         VersionedObject<T> toCache = new(AssetHelperPlugin.Version, obj);
         toCache?.SerializeToFile(filePath);
@@ -71,7 +33,7 @@ internal static class CacheManager
         Func<T> generator,
         string filename) where T : class
     {
-        string filePath = Path.Combine(CacheDirectory, filename);
+        string filePath = Path.Combine(AssetPaths.CacheDirectory, filename);
 
         if (JsonExtensions.TryLoadFromFile<VersionedObject<T>>(filePath, out VersionedObject<T>? fromCache))
         {
