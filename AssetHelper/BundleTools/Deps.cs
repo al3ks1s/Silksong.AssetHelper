@@ -3,7 +3,6 @@ using AssetsTools.NET.Extra;
 using Silksong.AssetHelper.Internal;
 using System.Collections.Generic;
 using System.IO;
-using UnityEngine;
 
 namespace Silksong.AssetHelper.BundleTools;
 
@@ -19,11 +18,9 @@ public static class Deps
     }
     
     /// <summary>
-    /// Lookup for bundle name to cab name.
+    /// Lookup for cab name to bundle path.
     /// </summary>
     public static IReadOnlyDictionary<string, string> CabLookup { get; private set; } = null!;
-
-    private static CachedObject<Dictionary<string, List<string>>> DirectDependencyLookup { get; set; } = null!;
 
     private static Dictionary<string, string> GenerateCabLookup()
     {
@@ -44,6 +41,8 @@ public static class Deps
 
         return lookup;
     }
+
+    private static CachedObject<Dictionary<string, List<string>>> DirectDependencyLookup { get; set; } = null!;
 
     /// <summary>
     /// Determine the direct dependencies for a given bundle.

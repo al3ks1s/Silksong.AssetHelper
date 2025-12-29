@@ -3,7 +3,7 @@
 /// <summary>
 /// Object that is loaded from cache if possible, and instantiated if not.
 /// 
-/// The object is saved when 
+/// The object is saved when quitting the application.
 /// </summary>
 /// <typeparam name="T"></typeparam>
 internal class CachedObject<T> where T : class, new()
