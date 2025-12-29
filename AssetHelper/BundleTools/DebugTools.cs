@@ -124,4 +124,55 @@ public static class DebugTools
             };
         }
     }
+
+    private static Dictionary<string, string>? _bundleNameLookup;
+
+    private static Dictionary<string, string> GenerateBundleNameLookup()
+    {
+        Dictionary<string, string> lookup = new();
+
+        foreach ((string name, string key) in AssetsData.BundleKeys!)
+        {
+            var op = Addressables.LoadAssetAsync<IAssetBundleResource>(key);
+            op.WaitForCompletion();
+            lookup[op.Result.GetAssetBundle().name] = name;
+            Addressables.Release(op);
+        }
+
+        return lookup;
+    }
+
+    /// <summary>
+    /// Get a readable list of loaded bundle names (paths relative to the bundle base dir).
+    /// 
+    /// The first time this is used in each Silksong version, it will generate a lookup of bundle name -> readable name,
+    /// which is quite slow.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Raised if this is called before Addressables is ready.</exception>
+    public static LoadedBundleNames GetLoadedBundleNames(out List<string> names, out List<string> unknown)
+    {
+        if (!AssetsData.IsAddressablesLoaded)
+        {
+            throw new InvalidOperationException($"{nameof(GetLoadedBundleNames)} cannot be called until Addressables is loaded!");
+        }
+
+        _bundleNameLookup ??= CacheManager.GetCached(GenerateBundleNameLookup, "bundle_name_lookup.json");
+
+        names = [];
+        unknown = [];
+
+        foreach (string bunName in AssetBundle.GetAllLoadedAssetBundles().Select(b => b.name))
+        {
+            if (_bundleNameLookup.TryGetValue(bunName, out string name))
+            {
+                names.Add(name);
+            }
+            else
+            {
+                unknown.Add(bunName);
+            }
+        }
+
+        return new(names, unknown);
+    }
 }
