@@ -210,13 +210,12 @@ public static class BundleCreate
             }
         }
 
-        // TODO - do this and the container together
-        // Fix up the preload table
-        List<string> gameObjectNames = gameObjects.Keys.ToList();
+        // Add assets to container, and fix the preload table
         List<AssetTypeValueField> preloadPtrs = [];
-        List<(int start, int count)> depCounts = new();
+        List<string> containerPaths = [];
+        List<AssetTypeValueField> newChildren = [];
 
-        foreach (string objName in gameObjectNames)
+        foreach (string objName in gameObjects.Keys)
         {
             BundleUtils.AssetData goData = gameObjects[objName];
 
@@ -240,24 +239,6 @@ public static class BundleCreate
 
             int count = preloadPtrs.Count - start;
 
-            depCounts.Add((start, count));
-        }
-
-        bundleData["m_PreloadTable.Array"].Children.Clear();
-        bundleData["m_PreloadTable.Array"].Children.AddRange(preloadPtrs);
-
-        // Add new assets to the container
-        List<string> containerPaths = [];
-        AssetTypeValueField assetPtr = bundleData["m_Container.Array"][0];
-
-        List<AssetTypeValueField> newChildren = [];
-
-        for (int i = 0; i < objectNames.Count; i++)
-        {
-            string objName = objectNames[i];
-            BundleUtils.AssetData goData = gameObjects[objName];
-            (int start, int count) = depCounts[i];
-
             string containerPath = $"{nameof(AssetHelper)}/{objName}.prefab";
             containerPaths.Add(containerPath);
 
@@ -270,6 +251,8 @@ public static class BundleCreate
             newChildren.Add(newChild);
         }
 
+        bundleData["m_PreloadTable.Array"].Children.Clear();
+        bundleData["m_PreloadTable.Array"].Children.AddRange(preloadPtrs);
         bundleData["m_Container.Array"].Children.Clear();
         bundleData["m_Container.Array"].Children.AddRange(newChildren);
         outData.GameObjectAssets = containerPaths;
