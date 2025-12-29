@@ -114,16 +114,20 @@ public static class BundleCreate
     /// The content of this bundle does not matter.
     /// If null, a sensible default for silksong will be selected.</param>
     /// <param name="outBundlePath">A path to the created bundle.</param>
-    public static void CreateShallowSceneBundle(
+    /// <returns>An object encapsulating information about the written bundle.</returns>
+    public static RepackedBundleData CreateShallowSceneBundle(
         string sceneBundlePath,
         List<string> objectNames,
         string outBundlePath,
         string? nonSceneBundlePath = null
         )
     {
+        RepackedBundleData outData = new();
         AssetsManager mgr = BundleUtils.CreateDefaultManager();
 
         GetBundleNames(sceneBundlePath, objectNames, outBundlePath, out string newCabName, out string newBundleName);
+        outData.BundleName = newBundleName;
+        outData.CabName = newCabName;
 
         // TODO - avoid hardcoding this. I'd like something with no aux internal files, I think...
         nonSceneBundlePath ??= Path.Combine(AssetPaths.BundleFolder, "toolui_assets_all.bundle");
@@ -243,6 +247,7 @@ public static class BundleCreate
         bundleData["m_PreloadTable.Array"].Children.AddRange(preloadPtrs);
 
         // Add new assets to the container
+        List<string> containerPaths = [];
         AssetTypeValueField assetPtr = bundleData["m_Container.Array"][0];
 
         List<AssetTypeValueField> newChildren = [];
@@ -253,8 +258,11 @@ public static class BundleCreate
             BundleUtils.AssetData goData = gameObjects[objName];
             (int start, int count) = depCounts[i];
 
+            string containerPath = $"{nameof(AssetHelper)}/{objName}.prefab";
+            containerPaths.Add(containerPath);
+
             AssetTypeValueField newChild = ValueBuilder.DefaultValueFieldFromArrayTemplate(bundleData["m_Container.Array"]);
-            newChild["first"].AsString = $"{nameof(AssetHelper)}/{objName}.prefab";
+            newChild["first"].AsString = containerPath;
             newChild["second.preloadIndex"].AsInt = start;
             newChild["second.preloadSize"].AsInt = count;
             newChild["second.asset.m_FileID"].AsInt = 1;
@@ -264,6 +272,7 @@ public static class BundleCreate
 
         bundleData["m_Container.Array"].Children.Clear();
         bundleData["m_Container.Array"].Children.AddRange(newChildren);
+        outData.AssetPaths = containerPaths;
 
         // Finish up
         internalBundle.SetNewData(bundleData);
@@ -275,5 +284,7 @@ public static class BundleCreate
         {
             modBunF.Write(writer);
         }
+
+        return outData;
     }
 }
