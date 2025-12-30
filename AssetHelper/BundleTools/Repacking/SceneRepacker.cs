@@ -1,5 +1,4 @@
 ﻿using AssetsTools.NET.Extra;
-using BepInEx.Logging;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
@@ -12,8 +11,6 @@ namespace Silksong.AssetHelper.BundleTools.Repacking;
 /// </summary>
 public abstract class SceneRepacker
 {
-    protected static ManualLogSource Log = Logger.CreateLogSource($"{nameof(AssetHelper)}.{nameof(SceneRepacker)}");
-
     /// <summary>
     /// Given a scene bundle instance, find the main assets file and the sharedAssets file
     /// within the bundle.

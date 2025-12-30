@@ -62,8 +62,8 @@ public class ShallowSceneRepacker : SceneRepacker
 
         if (missingObjects.Count > 0)
         {
-            Log.LogWarning($"Missing objects for bundle {sceneBundlePath}");
-            Log.LogWarning(string.Join(", ", missingObjects));
+            AssetHelperPlugin.InstanceLogger.LogWarning($"Missing objects for bundle {sceneBundlePath}");
+            AssetHelperPlugin.InstanceLogger.LogWarning(string.Join(", ", missingObjects));
         }
 
         // Load a non-scene bundle to modify
