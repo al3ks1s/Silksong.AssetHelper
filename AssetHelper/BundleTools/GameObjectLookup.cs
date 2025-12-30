@@ -70,7 +70,7 @@ public class GameObjectLookup : IEnumerable<GameObjectLookup.GameObjectInfo>
             long goPathId = tValueField["m_GameObject.m_PathID"].AsLong;
             AssetTypeValueField goValueField = mgr.GetBaseField(afileInst, goPathId);
             string goName = goValueField["m_Name"].AsString;
-            long parentTransformPathId = tValueField["m_Father.PathID"].AsLong;
+            long parentTransformPathId = tValueField["m_Father.m_PathID"].AsLong;
 
             if (parentTransformPathId == 0)
             {

@@ -48,7 +48,7 @@ public class ShallowSceneRepacker : SceneRepacker
 
         // Load the scene bundle
         BundleFileInstance sceneBun = mgr.LoadBundleFile(sceneBundlePath);
-        if (!TryFindAssetsFiles(mgr, sceneBun, out AssetsFileInstance? mainSceneAfileInst, out AssetsFileInstance? sceneSharedAssetsFileInst))
+        if (!TryFindAssetsFiles(mgr, sceneBun, out AssetsFileInstance? mainSceneAfileInst, out AssetsFileInstance? sceneSharedAssetsFileInst, out _))
         {
             throw new NotSupportedException($"Could not find assets files for {sceneBundlePath}");
         }
