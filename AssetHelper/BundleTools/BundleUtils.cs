@@ -57,21 +57,32 @@ public static class BundleUtils
     public static List<AssetClassID> TransformClassIds { get; } = [AssetClassID.Transform, AssetClassID.RectTransform];
 
     /// <summary>
+    /// Enumerate all transforms in the given file.
+    /// </summary>
+    public static IEnumerable<AssetFileInfo> GetAllTransforms(this AssetsFile afile)
+    {
+        foreach (AssetClassID cid in TransformClassIds)
+        {
+            foreach (AssetFileInfo info in afile.GetAssetsOfType(cid))
+            {
+                yield return info;
+            }
+        }
+    }
+
+    /// <summary>
     /// Enumerate transforms in this bundle, only including transforms with no parent.
     /// </summary>
     public static IEnumerable<AssetData> GetRootTransforms(this AssetsManager mgr, AssetsFileInstance afileInst)
     {
-        foreach (AssetClassID cid in TransformClassIds)
+        foreach (AssetFileInfo info in afileInst.file.GetAllTransforms())
         {
-            foreach (AssetFileInfo info in afileInst.file.GetAssetsOfType(cid))
-            {
-                AssetTypeValueField transform = mgr.GetBaseField(afileInst, info);
-                AssetTypeValueField parent = transform["m_Father"];
+            AssetTypeValueField transform = mgr.GetBaseField(afileInst, info);
+            AssetTypeValueField parent = transform["m_Father"];
 
-                if (parent["m_PathID"].AsLong == 0)
-                {
-                    yield return new(info, transform);
-                }
+            if (parent["m_PathID"].AsLong == 0)
+            {
+                yield return new(info, transform);
             }
         }
     }

@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Silksong.AssetHelper.Internal;
 
-internal static class CollectionUtil
+internal static class ObjPathUtil
 {
     /// <summary>
     /// Return true if self == maybePrefix, or self is of the form {maybePrefix}/...
@@ -55,5 +56,32 @@ internal static class CollectionUtil
         }
 
         return nodes;
+    }
+
+    /// <summary>
+    /// Get the ancestor of the given game object within the collection of paths.
+    /// 
+    /// It is assumed that paths is a set of highest nodes, see <see cref="GetHighestNodes(ICollection{string})" />.
+    /// </summary>
+    /// <param name="paths">A list of paths of candidate ancestors.</param>
+    /// <param name="objName">A path to check.</param>
+    /// <param name="ancestorPath">The path representing the ancestor.</param>
+    /// <param name="relativePath">The path relative to the ancestor.</param>
+    /// <returns>False if the supplied game object has no ancestor in the repacked bundle.</returns>
+    public static bool TryGetAncestor(List<string> paths, string objName, [MaybeNullWhen(false)] out string ancestorPath, [MaybeNullWhen(false)] out string relativePath)
+    {
+        foreach (string path in paths ?? Enumerable.Empty<string>())
+        {
+            if (objName.HasPrefix(path))
+            {
+                ancestorPath = path;
+                relativePath = objName[(1 + path.Length)..];
+                return true;
+            }
+        }
+
+        ancestorPath = null;
+        relativePath = null;
+        return false;
     }
 }
