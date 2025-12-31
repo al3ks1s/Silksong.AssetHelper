@@ -31,7 +31,7 @@ public static class DebugTools
     /// </summary>
     public static void DumpAddressablesKeys()
     {
-        string dumpFile = Path.Combine(AssetPaths.AssemblyFolder, "bundle_keys.json");
+        string dumpFile = Path.Combine(AssetPaths.DebugDataDir, "bundle_keys.json");
 
         AssetsData.InvokeAfterAddressablesLoaded(() => AssetsData.BundleKeys.SerializeToFileInBackground(dumpFile));
     }
@@ -48,7 +48,7 @@ public static class DebugTools
 
     private static void DumpAllAssetNamesInternal()
     {
-        string dumpFile = Path.Combine(AssetPaths.AssemblyFolder, "asset_names.json");
+        string dumpFile = Path.Combine(AssetPaths.DebugDataDir, "asset_names.json");
 
         NameListLookup assetNames = [];
         NameListLookup sceneNames = [];
@@ -103,7 +103,7 @@ public static class DebugTools
             assetInfos.Add(AddressablesAssetInfo.FromLocation(loc));
         }
 
-        assetInfos.SerializeToFileInBackground(Path.Combine(AssetPaths.AssemblyFolder, "addressable_assets.json"));
+        assetInfos.SerializeToFileInBackground(Path.Combine(AssetPaths.DebugDataDir, "addressable_assets.json"));
     }
 
     private class AddressablesAssetInfo
@@ -188,7 +188,7 @@ public static class DebugTools
     public static void DumpGameObjectPaths(string sceneName, bool compressed)
     {
         string name = $"paths_{sceneName}" + (compressed ? "_compressed.json" : ".json");
-        string outPath = Path.Combine(AssetPaths.AssemblyFolder, name);
+        string outPath = Path.Combine(AssetPaths.DebugDataDir, name);
 
         AssetsManager mgr = BundleUtils.CreateDefaultManager();
         BundleFileInstance bunInst = mgr.LoadBundleFile(AssetPaths.GetScenePath(sceneName));
