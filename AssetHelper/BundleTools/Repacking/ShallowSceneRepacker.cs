@@ -48,10 +48,13 @@ public class ShallowSceneRepacker : SceneRepacker
 
         // Load the scene bundle
         BundleFileInstance sceneBun = mgr.LoadBundleFile(sceneBundlePath);
-        if (!TryFindAssetsFiles(mgr, sceneBun, out AssetsFileInstance? mainSceneAfileInst, out AssetsFileInstance? sceneSharedAssetsFileInst, out _))
+        if (!mgr.TryFindAssetsFiles(sceneBun, out BundleUtils.SceneBundleInfo sceneBundleInfo))
         {
             throw new NotSupportedException($"Could not find assets files for {sceneBundlePath}");
         }
+
+        AssetsFileInstance mainSceneAfileInst = mgr.LoadAssetsFileFromBundle(sceneBun, sceneBundleInfo.mainAfileInstIndex);
+        AssetsFileInstance sceneSharedAssetsFileInst = mgr.LoadAssetsFileFromBundle(sceneBun, sceneBundleInfo.sharedAssetsAfileIndex);
 
         AssetsFile sceneAfile = mainSceneAfileInst.file;
         AssetsFile sharedAssetsAfile = sceneSharedAssetsFileInst.file;
@@ -129,6 +132,8 @@ public class ShallowSceneRepacker : SceneRepacker
         List<string> containerPaths = [];
         List<AssetTypeValueField> newChildren = [];
 
+        AssetDependencies dependencies = new(mgr, mainSceneAfileInst);
+
         foreach (string objName in gameObjects.Keys)
         {
             BundleUtils.AssetData goData = gameObjects[objName];
@@ -136,7 +141,7 @@ public class ShallowSceneRepacker : SceneRepacker
             int start = preloadPtrs.Count;
 
             // Collect dependent pptrs
-            BundleUtils.ChildPPtrs childPPtrs = mgr.FindBundleDependentObjects(mainSceneAfileInst, goData.Info.PathId);
+            AssetDependencies.ChildPPtrs childPPtrs = dependencies.FindBundleDeps(goData.Info.PathId);
             foreach ((int fileId, long pathId) in childPPtrs.ExternalPaths)
             {
                 AssetTypeValueField depPtr = ValueBuilder.DefaultValueFieldFromArrayTemplate(bundleData["m_PreloadTable.Array"]);

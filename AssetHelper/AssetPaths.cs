@@ -110,5 +110,25 @@ public static class AssetPaths
         }
     }
 
-    internal static string AssemblyFolder => Directory.GetParent(typeof(DebugTools).Assembly.Location).FullName;
+    internal static string AssemblyFolder => Directory.GetParent(typeof(AssetPaths).Assembly.Location).FullName;
+
+    private static string _debugDataDir = Path.Combine(AssemblyFolder, "DebugData");
+
+    /// <summary>
+    /// The directory where functions in <see cref="DebugTools"/> write their output.
+    /// 
+    /// This defaults to a subfolder of this plugin's assembly, but can be changed.
+    /// </summary>
+    public static string DebugDataDir
+    {
+        get
+        {
+            if (!Directory.Exists(_debugDataDir))
+            {
+                Directory.CreateDirectory(_debugDataDir);
+            }
+            return _debugDataDir;
+        }
+        set => _debugDataDir = value;
+    }
 }

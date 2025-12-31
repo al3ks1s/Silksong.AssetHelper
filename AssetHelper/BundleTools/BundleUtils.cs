@@ -3,7 +3,6 @@ using AssetsTools.NET.Extra;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using PPtrData = (int fileId, long pathId);
 
 namespace Silksong.AssetHelper.BundleTools;
 
@@ -18,27 +17,6 @@ public static class BundleUtils
     /// <param name="Info"></param>
     /// <param name="ValueField"></param>
     public record AssetData(AssetFileInfo Info, AssetTypeValueField ValueField);
-
-    /// <summary>
-    /// Record representing a collection of PPtrs associated with an asset.
-    /// </summary>
-    /// <param name="InternalPaths">Path IDs within the current file.</param>
-    /// <param name="ExternalPaths">Pairs (file ID, path ID) external to the current file.</param>
-    public record ChildPPtrs(HashSet<long> InternalPaths, HashSet<PPtrData> ExternalPaths)
-    {
-        /// <summary>
-        /// Add a new PPtr to the collection.
-        /// </summary>
-        public bool Add(int fileId, long pathId)
-        {
-            if (pathId == 0) return false;
-            if (fileId == 0) return InternalPaths.Add(pathId);
-            return ExternalPaths.Add((fileId, pathId));
-        }
-
-        /// <inheritdoc cref="Add(int, long)" />
-        public bool Add(AssetTypeValueField valueField) => Add(valueField["m_FileID"].AsInt, valueField["m_PathID"].AsLong);
-    }
 
     /// <summary>
     /// Create an <see cref="AssetsManager"/> with the default settings for AssetHelper.
@@ -183,102 +161,46 @@ public static class BundleUtils
     }
 
     /// <summary>
-    /// Find all PPtr nodes pointed to by the given asset.
+    /// Info about the assets files in a scene bundle.
     /// </summary>
-    /// <param name="mgr">The AssetsManager in use.</param>
-    /// <param name="afileInst">The Assets file instance.</param>
-    /// <param name="assetPathId">The path ID for the asset to check.</param>
-    /// <param name="followParent">If false (default), will not check the parent for a transform.</param>
-    public static ChildPPtrs FindPPtrNodes(
-        this AssetsManager mgr,
-        AssetsFileInstance afileInst,
-        long assetPathId,
-        bool followParent = false
-        )
-    {
-        AssetFileInfo info = afileInst.file.GetAssetInfo(assetPathId);
-
-        HashSet<long> internalPPtrs = [];
-        HashSet<PPtrData> externalPPtrs = [];
-        ChildPPtrs childPPtrs = new(internalPPtrs, externalPPtrs);
-
-        if (!followParent && (
-            info.TypeId == (int)AssetClassID.Transform
-            || info.TypeId == (int)AssetClassID.RectTransform
-            ))
-        {
-            AssetTypeValueField tfValueField = mgr.GetBaseField(afileInst, info);
-
-            childPPtrs.Add(tfValueField["m_GameObject"]);
-
-            foreach (AssetTypeValueField childVf in tfValueField["m_Children.Array"].Children)
-            {
-                childPPtrs.Add(childVf);
-            }
-            return childPPtrs;
-        }
-
-        AssetTypeTemplateField templateField = mgr.GetTemplateBaseField(afileInst, info);
-        RefTypeManager refMan = mgr.GetRefTypeManager(afileInst);
-
-        long assetPos = info.GetAbsoluteByteOffset(afileInst.file);
-        AssetTypeValueIterator atvIterator = new(templateField, afileInst.file.Reader, assetPos, refMan);
-
-        while (atvIterator.ReadNext())
-        {
-            string typeName = atvIterator.TempField.Type;
-
-            if (!typeName.StartsWith("PPtr<")) continue;
-
-            AssetTypeValueField valueField = atvIterator.ReadValueField();
-            childPPtrs.Add(valueField);
-        }
-
-        return new(internalPPtrs, externalPPtrs);
-    }
+    /// <param name="mainAfileInstIndex">The index of the main assets file.</param>
+    /// <param name="sharedAssetsAfileIndex">The index of the shared assets file.</param>
+    public record SceneBundleInfo(
+        int mainAfileInstIndex,
+        int sharedAssetsAfileIndex);
 
     /// <summary>
-    /// Enumerate all pptrs that are dependencies of this asset. PPtrs within the current bundle will be followed
-    /// but external pptrs will not.
+    /// Given a scene bundle instance, find the main assets file and the sharedAssets file
+    /// within the bundle.
     /// </summary>
-    /// <param name="mgr">The AssetsManager in use.</param>
-    /// <param name="afileInst">The Assets file instance.</param>
-    /// <param name="assetPathId">The path ID for the asset to check.</param>
-    /// <param name="followParent">If false (default), will not check the parent for a transform.</param>
-    public static ChildPPtrs FindBundleDependentObjects(
+    public static bool TryFindAssetsFiles(
         this AssetsManager mgr,
-        AssetsFileInstance afileInst,
-        long assetPathId,
-        bool followParent = false
-        )
+        BundleFileInstance sceneBun,
+        out SceneBundleInfo info)
     {
-        HashSet<long> internalSeen = new([assetPathId]);
-        HashSet<PPtrData> externalSeen = [];
+        int mainAfileIdx = -1;
+        int sharedAssetsAfileIdx = -1;
 
-        Queue<long> toProcess = new();
-        toProcess.Enqueue(assetPathId);
-
-        // Aquire the lock for the whole procedure
-        lock (afileInst.LockReader)
+        List<string> names = sceneBun.file.GetAllFileNames();
+        for (int i = 0; i < names.Count; i++)
         {
-            while (toProcess.TryDequeue(out long current))
+            if (!names[i].Contains('.'))
             {
-                ChildPPtrs childPptrs = mgr.FindPPtrNodes(afileInst, current, followParent);
-
-                externalSeen.UnionWith(childPptrs.ExternalPaths);
-
-                foreach (long pathId in childPptrs.InternalPaths)
-                {
-                    if (internalSeen.Add(pathId))
-                    {
-                        toProcess.Enqueue(pathId);
-                    }
-                }
+                mainAfileIdx = i;
+            }
+            else if (names[i].EndsWith(".sharedAssets"))
+            {
+                sharedAssetsAfileIdx = i;
             }
         }
 
-        internalSeen.Remove(assetPathId);
+        info = new(mainAfileIdx, sharedAssetsAfileIdx);
 
-        return new(internalSeen, externalSeen);
+        if (mainAfileIdx == -1 || sharedAssetsAfileIdx == -1)
+        {
+            return false;
+        }
+
+        return true;
     }
 }
