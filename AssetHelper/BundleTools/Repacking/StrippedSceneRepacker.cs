@@ -29,10 +29,14 @@ public class StrippedSceneRepacker : SceneRepacker
         outData.CabName = newCabName;
 
         BundleFileInstance sceneBun = mgr.LoadBundleFile(sceneBundlePath);
-        if (!TryFindAssetsFiles(mgr, sceneBun, out AssetsFileInstance? mainSceneAfileInst, out AssetsFileInstance? sceneSharedAssetsFileInst, out int mainAfileIdx))
+        if (!mgr.TryFindAssetsFiles(sceneBun, out BundleUtils.SceneBundleInfo sceneBundleInfo))
         {
             throw new NotSupportedException($"Could not find assets files for {sceneBundlePath}");
         }
+
+        AssetsFileInstance mainSceneAfileInst = mgr.LoadAssetsFileFromBundle(sceneBun, sceneBundleInfo.mainAfileInstIndex);
+        AssetsFileInstance sceneSharedAssetsFileInst = mgr.LoadAssetsFileFromBundle(sceneBun, sceneBundleInfo.sharedAssetsAfileIndex);
+        int mainAfileIdx = sceneBundleInfo.mainAfileInstIndex;
 
         GameObjectLookup goLookup = GameObjectLookup.CreateFromFile(mgr, mainSceneAfileInst);
 

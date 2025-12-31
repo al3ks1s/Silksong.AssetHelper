@@ -159,4 +159,48 @@ public static class BundleUtils
 
         return current;
     }
+
+    /// <summary>
+    /// Info about the assets files in a scene bundle.
+    /// </summary>
+    /// <param name="mainAfileInstIndex">The index of the main assets file.</param>
+    /// <param name="sharedAssetsAfileIndex">The index of the shared assets file.</param>
+    public record SceneBundleInfo(
+        int mainAfileInstIndex,
+        int sharedAssetsAfileIndex);
+
+    /// <summary>
+    /// Given a scene bundle instance, find the main assets file and the sharedAssets file
+    /// within the bundle.
+    /// </summary>
+    public static bool TryFindAssetsFiles(
+        this AssetsManager mgr,
+        BundleFileInstance sceneBun,
+        out SceneBundleInfo info)
+    {
+        int mainAfileIdx = -1;
+        int sharedAssetsAfileIdx = -1;
+
+        List<string> names = sceneBun.file.GetAllFileNames();
+        for (int i = 0; i < names.Count; i++)
+        {
+            if (!names[i].Contains('.'))
+            {
+                mainAfileIdx = i;
+            }
+            else if (names[i].EndsWith(".sharedAssets"))
+            {
+                sharedAssetsAfileIdx = i;
+            }
+        }
+
+        info = new(mainAfileIdx, sharedAssetsAfileIdx);
+
+        if (mainAfileIdx == -1 || sharedAssetsAfileIdx == -1)
+        {
+            return false;
+        }
+
+        return true;
+    }
 }

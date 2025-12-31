@@ -12,45 +12,6 @@ namespace Silksong.AssetHelper.BundleTools.Repacking;
 public abstract class SceneRepacker
 {
     /// <summary>
-    /// Given a scene bundle instance, find the main assets file and the sharedAssets file
-    /// within the bundle.
-    /// </summary>
-    protected static bool TryFindAssetsFiles(
-        AssetsManager mgr,
-        BundleFileInstance sceneBun,
-        [MaybeNullWhen(false)] out AssetsFileInstance mainAfileInst,
-        [MaybeNullWhen(false)] out AssetsFileInstance sharedAssetsAfileInst,
-        out int mainAfileIdx)
-    {
-        mainAfileIdx = -1;
-        int sharedAssetsAfileIdx = -1;
-
-        List<string> names = sceneBun.file.GetAllFileNames();
-        for (int i = 0; i < names.Count; i++)
-        {
-            if (!names[i].Contains('.'))
-            {
-                mainAfileIdx = i;
-            }
-            else if (names[i].EndsWith(".sharedAssets"))
-            {
-                sharedAssetsAfileIdx = i;
-            }
-        }
-
-        if (mainAfileIdx == -1 || sharedAssetsAfileIdx == -1)
-        {
-            mainAfileInst = default;
-            sharedAssetsAfileInst = default;
-            return false;
-        }
-
-        mainAfileInst = mgr.LoadAssetsFileFromBundle(sceneBun, mainAfileIdx, false);
-        sharedAssetsAfileInst = mgr.LoadAssetsFileFromBundle(sceneBun, sharedAssetsAfileIdx, false);
-        return true;
-    }
-
-    /// <summary>
     /// Determine sensible cab and bundle names for the given bundle.
     /// 
     /// These don't matter, but these ones look like the ones made by unity.

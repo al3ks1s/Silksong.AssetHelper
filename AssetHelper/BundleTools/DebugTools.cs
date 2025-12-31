@@ -12,6 +12,8 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
 using NameListLookup = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
+using AssetsTools.NET.Extra;
+using Silksong.AssetHelper.BundleTools.Repacking;
 
 namespace Silksong.AssetHelper.BundleTools;
 
@@ -174,5 +176,38 @@ public static class DebugTools
         }
 
         return new(names, unknown);
+    }
+
+    /// <summary>
+    /// Dump all game object paths to paths_{sceneName}.json in this assembly's directory.
+    /// If <paramref name="compressed"/> is true, the output file will be paths_{sceneName}_compressed.json.
+    /// </summary>
+    /// <param name="sceneName">The name of the scene.</param>
+    /// <param name="compressed">If <see langword="true"/>, dump as entries "objPath [goPathId, transformPathId]".
+    /// If <see langword="false"/>, dump as full json.</param>
+    public static void DumpGameObjectPaths(string sceneName, bool compressed)
+    {
+        string name = $"paths_{sceneName}" + (compressed ? "_compressed.json" : ".json");
+        string outPath = Path.Combine(AssetPaths.AssemblyFolder, name);
+
+        AssetsManager mgr = BundleUtils.CreateDefaultManager();
+        BundleFileInstance bunInst = mgr.LoadBundleFile(AssetPaths.GetScenePath(sceneName));
+        if (!mgr.TryFindAssetsFiles(bunInst, out BundleUtils.SceneBundleInfo sceneBundleInfo))
+        {
+            return;
+        }
+
+        AssetsFileInstance mainFileInst = mgr.LoadAssetsFileFromBundle(bunInst, sceneBundleInfo.mainAfileInstIndex);
+
+        GameObjectLookup lookup = GameObjectLookup.CreateFromFile(mgr, mainFileInst);
+        List<GameObjectLookup.GameObjectInfo> infos = lookup.TraverseOrdered().ToList();
+        if (!compressed)
+        {
+            infos.SerializeToFile(outPath);
+            return;
+        }
+
+        List<string> cInfos = infos.Select(x => $"{x.GameObjectName} [{x.GameObjectPathId}, {x.TransformPathId}]").ToList();
+        cInfos.SerializeToFile(outPath);
     }
 }
