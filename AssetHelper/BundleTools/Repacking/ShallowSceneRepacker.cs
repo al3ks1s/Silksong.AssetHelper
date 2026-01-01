@@ -129,7 +129,7 @@ public class ShallowSceneRepacker : SceneRepacker
 
         // Add assets to container, and fix the preload table
         List<AssetTypeValueField> preloadPtrs = [];
-        List<string> containerPaths = [];
+        Dictionary<string, string> containerPaths = [];
         List<AssetTypeValueField> newChildren = [];
 
         AssetDependencies dependencies = new(mgr, mainSceneAfileInst);
@@ -159,7 +159,7 @@ public class ShallowSceneRepacker : SceneRepacker
             int count = preloadPtrs.Count - start;
 
             string containerPath = $"{nameof(AssetHelper)}/{objName}.prefab";
-            containerPaths.Add(containerPath);
+            containerPaths.Add(containerPath, objName);
 
             AssetTypeValueField newChild = ValueBuilder.DefaultValueFieldFromArrayTemplate(bundleData["m_Container.Array"]);
             newChild["first"].AsString = containerPath;

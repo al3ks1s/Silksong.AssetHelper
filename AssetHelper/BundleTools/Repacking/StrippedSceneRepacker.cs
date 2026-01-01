@@ -149,6 +149,7 @@ public class StrippedSceneRepacker : SceneRepacker
         // Add objects to the container
         List<AssetTypeValueField> preloadPtrs = [];
         List<AssetTypeValueField> newChildren = [];
+        Dictionary<string, string> containerPaths = [];
 
         foreach (string containerGo in includedContainerGos)
         {
@@ -168,6 +169,7 @@ public class StrippedSceneRepacker : SceneRepacker
             int count = preloadPtrs.Count - start;
 
             string containerPath = $"{nameof(AssetHelper)}/{containerGo}.prefab";
+            containerPaths[containerPath] = containerGo;
 
             AssetTypeValueField newChild = ValueBuilder.DefaultValueFieldFromArrayTemplate(iBundleData["m_Container.Array"]);
             newChild["first"].AsString = containerPath;
@@ -182,7 +184,7 @@ public class StrippedSceneRepacker : SceneRepacker
         iBundleData["m_PreloadTable.Array"].Children.AddRange(preloadPtrs);
         iBundleData["m_Container.Array"].Children.Clear();
         iBundleData["m_Container.Array"].Children.AddRange(newChildren);
-        outData.GameObjectAssets = includedContainerGos.ToList();
+        outData.GameObjectAssets = containerPaths;
 
         // Move the asset at pathId = 1 to newOneAssetPathId
         if (newOneAssetPathId != 1)
