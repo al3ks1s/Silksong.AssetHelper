@@ -3,6 +3,7 @@ using Silksong.AssetHelper.BundleTools.Repacking;
 using Silksong.AssetHelper.Internal;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using RepackDataCollection = System.Collections.Generic.Dictionary<string, Silksong.AssetHelper.BundleTools.RepackedBundleData>;
@@ -12,7 +13,7 @@ namespace Silksong.AssetHelper.Plugin;
 /// <summary>
 /// Class managing the scene repacking.
 /// </summary>
-public static class SceneAssetManager
+internal static class SceneAssetManager
 {
     private static readonly Version _lastAcceptablePluginVersion = Version.Parse("0.1.0");
 
@@ -80,5 +81,33 @@ public static class SceneAssetManager
             _repackData.SerializeToFile(repackDataPath);
             SingleRepackOperationCompleted?.Invoke();
         }
+    }
+
+    /// <summary>
+    /// Check whether the given scene object is loadable using AssetHelper.
+    /// 
+    /// This function assumes that the game object existed in the original scene.
+    /// </summary>
+    /// <param name="sceneName">The scene name.</param>
+    /// <param name="objName">The hierarchical name of the given game object.</param>
+    /// <param name="assetPath">The path within the asset bundle.</param>
+    /// <param name="relativePath">The path to the game object relative to the asset, or null
+    /// if the asset and the requested game object are the same.</param>
+    private static bool TryGetSceneAssetData(
+        string sceneName,
+        string objName,
+        [MaybeNullWhen(false)] out string assetPath,
+        out string? relativePath
+        )
+    {
+        if (_repackData == null
+            || !_repackData.TryGetValue(sceneName, out RepackedBundleData data))
+        {
+            assetPath = null;
+            relativePath = null;
+            return false;
+        }
+
+        return data.CanLoad(objName, out assetPath, out relativePath);
     }
 }
