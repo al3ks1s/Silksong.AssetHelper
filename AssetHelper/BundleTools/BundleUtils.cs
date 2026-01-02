@@ -114,6 +114,29 @@ public static class BundleUtils
         return gameObjects;
     }
 
+    /// <summary>
+    /// Find root game objects.
+    /// </summary>
+    public static Dictionary<string, AssetData> FindRootGameObjects(
+        this AssetsManager mgr,
+        AssetsFileInstance afileInst
+        )
+    {
+        Dictionary<string, AssetData> gameObjects = new();
+
+        foreach (AssetData data in mgr.GetRootTransforms(afileInst))
+        {
+            AssetFileInfo goInfo = afileInst.file.GetAssetInfo(data.ValueField["m_GameObject.m_PathID"].AsLong);
+            AssetTypeValueField goValueField = mgr.GetBaseField(afileInst, goInfo);
+            string goName = goValueField["m_Name"].AsString;
+
+            gameObjects[goName] = new(goInfo, goValueField);
+
+        }
+
+        return gameObjects;
+    }
+
     /// <inheritdoc cref="GetTransformName(AssetsManager, AssetsFileInstance, AssetTypeValueField)" />
     public static string GetTransformName(this AssetsManager mgr, AssetsFileInstance afileInst, AssetFileInfo info)
     {

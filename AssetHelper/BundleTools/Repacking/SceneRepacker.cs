@@ -1,8 +1,14 @@
 ﻿using AssetsTools.NET.Extra;
+using Silksong.AssetHelper.CatalogTools;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using UnityEngine;
+using UnityEngine.AddressableAssets.ResourceLocators;
+using UnityEngine.ResourceManagement.ResourceLocations;
 
 namespace Silksong.AssetHelper.BundleTools.Repacking;
 
@@ -98,6 +104,50 @@ public abstract class SceneRepacker
         cabName = $"CAB-{fullHash.Substring(0, 32)}";
         bundleName = $"{fullHash.Substring(32, 32)}.bundle";
     }
+
+    public RepackedBundleData RepackLocation(IResourceLocation sceneLocation, List<string> objectNames)
+    {
+
+        string scene = sceneLocation.PrimaryKey.Split("/").Last();
+        var bundleLocation = sceneLocation.Dependencies.First(loc => loc.PrimaryKey.Contains("scenes_scenes_scenes/") && loc.PrimaryKey.Contains(".bundle"));
+        string tempScenePath = Path.Combine(Path.GetTempPath(), scene.ToLower() + ".bundle");
+        string outBundlePath = Path.Combine(AssetPaths.RepackedBundleFolder, $"{nameof(AssetHelper)}-{scene}.bundle");
+
+        File.Copy(
+            bundleLocation.InternalId,
+            tempScenePath,
+            true
+        );
+
+        RepackedBundleData packedBundle = Repack(tempScenePath, objectNames, outBundlePath);
+
+        List<string> bundleDependencies = sceneLocation.Dependencies.Where(loc => loc.PrimaryKey.Contains(".bundle") && !loc.PrimaryKey.Contains("scenes_scenes_scenes/")).Select(loc => nameof(AssetHelper) + loc.PrimaryKey).ToList();
+        packedBundle.CatalogDataEntries.Add(
+            CatalogEntryUtils.CreateBundleEntry(
+                $"{nameof(AssetHelper)}-{scene}-{packedBundle.BundleName}",
+                outBundlePath,
+                packedBundle.BundleName,
+                bundleDependencies
+            )
+        );
+
+        foreach (var asset in packedBundle.GameObjectAssets)
+        {
+            packedBundle.CatalogDataEntries.Add(
+                CatalogEntryUtils.CreateAssetEntry(asset, typeof(GameObject), $"{nameof(AssetHelper)}-{scene}-{packedBundle.BundleName}")
+            );
+        }
+
+        List<IResourceLocation> dependencyLocations = sceneLocation.Dependencies.Where(loc => loc.PrimaryKey.Contains(".bundle") && !loc.PrimaryKey.Contains("scenes_scenes_scenes/")));
+        foreach (var dependency in dependencyLocations)
+        {
+            packedBundle.CatalogDataEntries.Add(CatalogEntryUtils.CreateEntryFromLocation(dependency));
+        }
+
+        return packedBundle;
+
+    }
+
 
     /// <summary>
     /// Create a bundle that can be used to spawn objects from the provided scene bundle.

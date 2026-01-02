@@ -12,6 +12,7 @@ namespace Silksong.AssetHelper;
 public static class AssetPaths
 {
     private static string? _bundleFolder;
+    private static string? _repackedBundleFolder;
     private static string? _catalogFolder;
     private static string? _cacheDirectory;
     private static string? _silksongVersion;
@@ -26,6 +27,19 @@ public static class AssetPaths
             _bundleFolder ??= GetBundleFolder();
             return _bundleFolder;
         }
+    }
+
+    private static string GetBundleFolder()
+    {
+        string rootFolder = Application.streamingAssetsPath;
+        string osFolder = Application.platform switch
+        {
+            RuntimePlatform.WindowsPlayer => "StandaloneWindows64",
+            RuntimePlatform.OSXPlayer => "StandaloneOSX",
+            RuntimePlatform.LinuxPlayer => "StandaloneLinux64",
+            _ => ""
+        };
+        return Path.Combine(rootFolder, "aa", osFolder);
     }
 
     /// <summary>
@@ -48,17 +62,24 @@ public static class AssetPaths
         );
     }
 
-    private static string GetBundleFolder()
+    /// <summary>
+    /// Path to the repacked bundle folder
+    /// </summary>
+    public static string RepackedBundleFolder
     {
-        string rootFolder = Application.streamingAssetsPath;
-        string osFolder = Application.platform switch
+        get
         {
-            RuntimePlatform.WindowsPlayer => "StandaloneWindows64",
-            RuntimePlatform.OSXPlayer => "StandaloneOSX",
-            RuntimePlatform.LinuxPlayer => "StandaloneLinux64",
-            _ => ""
-        };
-        return Path.Combine(rootFolder, "aa", osFolder);
+            _repackedBundleFolder ??= GetRepackedBundleFolder();
+            return _repackedBundleFolder;
+        }
+    }
+
+    private static string GetRepackedBundleFolder()
+    {
+        return Path.Combine(
+                AssetPaths.CacheDirectory,
+                "Repacked_Scenes"
+        );
     }
 
     /// <summary>

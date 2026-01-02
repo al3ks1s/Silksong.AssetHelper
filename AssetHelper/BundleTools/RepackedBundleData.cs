@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
+using UnityEngine.AddressableAssets.ResourceLocators;
 
 namespace Silksong.AssetHelper.BundleTools;
 
@@ -26,6 +27,11 @@ public class RepackedBundleData
     /// A list of asset paths in the asset bundle container.
     /// </summary>
     public List<string>? GameObjectAssets { get; set; }
+
+    /// <summary>
+    /// A list of content catalog entries to be serialized. Must contain the assets entries and all the necessary dependencies.
+    /// </summary>
+    public List<ContentCatalogDataEntry>? CatalogDataEntries { get; set; }
 
     /// <summary>
     /// Get the ancestor of the given game object within the repacked bundle.

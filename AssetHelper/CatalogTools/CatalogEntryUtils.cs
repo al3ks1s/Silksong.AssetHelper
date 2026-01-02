@@ -19,7 +19,7 @@ internal static class CatalogEntryUtils
     /// <param name="key">The primary key of the bundle.</param>
     /// <param name="bundlePath">The fully qualified path to the bundle on the filesystem</param>
     /// <param name="internalBundleName">The name of the AssetBundle asset in the bundle.</param>
-    /// <param name="dependencyKeys">List of all the primary keys of the bundle dependencies. Note: All keys found in the dependencies must have their corresponding entry in the catalog</param>
+    /// <param name="dependencyKeys">List of all the primary keys of the bundle dependencies. Note: All keys found in the dependencies must have their corresponding entry in the list to be serialized</param>
     public static ContentCatalogDataEntry CreateBundleEntry(string key, string bundlePath, string internalBundleName, List<string> dependencyKeys)
     {
 
