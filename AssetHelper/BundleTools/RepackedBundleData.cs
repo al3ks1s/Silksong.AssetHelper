@@ -51,11 +51,7 @@ public class RepackedBundleData
     public List<ContentCatalogDataEntry>? CatalogDataEntries { get; set; }
 
     /// <summary>
-    /// Get the ancestor of the given game object within the repacked bundle.
-    /// 
-    /// If bun is a <see cref="UnityEngine.AssetBundle"/> object loaded from this bundle, then
-    /// bun.LoadAsset&lt;GameObject&gt;(ancestorName).FindChild(relativePath) will
-    /// retrieve the requested game object.
+    /// Assets which were requested but failed to be repacked.
     /// </summary>
     public List<string>? NonRepackedAssets { get; set; }
 }
