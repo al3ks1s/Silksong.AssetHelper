@@ -2,8 +2,8 @@
 using AssetsTools.NET.Extra;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using PPtrData = (int fileId, long pathId);
 
 namespace Silksong.AssetHelper.BundleTools;
 
@@ -18,27 +18,6 @@ public static class BundleUtils
     /// <param name="Info"></param>
     /// <param name="ValueField"></param>
     public record AssetData(AssetFileInfo Info, AssetTypeValueField ValueField);
-
-    /// <summary>
-    /// Record representing a collection of PPtrs associated with an asset.
-    /// </summary>
-    /// <param name="InternalPaths">Path IDs within the current file.</param>
-    /// <param name="ExternalPaths">Pairs (file ID, path ID) external to the current file.</param>
-    public record ChildPPtrs(HashSet<long> InternalPaths, HashSet<PPtrData> ExternalPaths)
-    {
-        /// <summary>
-        /// Add a new PPtr to the collection.
-        /// </summary>
-        public bool Add(int fileId, long pathId)
-        {
-            if (pathId == 0) return false;
-            if (fileId == 0) return InternalPaths.Add(pathId);
-            return ExternalPaths.Add((fileId, pathId));
-        }
-
-        /// <inheritdoc cref="Add(int, long)" />
-        public bool Add(AssetTypeValueField valueField) => Add(valueField["m_FileID"].AsInt, valueField["m_PathID"].AsLong);
-    }
 
     /// <summary>
     /// Create an <see cref="AssetsManager"/> with the default settings for AssetHelper.
@@ -206,102 +185,123 @@ public static class BundleUtils
     }
 
     /// <summary>
-    /// Find all PPtr nodes pointed to by the given asset.
+    /// Info about the assets files in a scene bundle.
     /// </summary>
-    /// <param name="mgr">The AssetsManager in use.</param>
-    /// <param name="afileInst">The Assets file instance.</param>
-    /// <param name="assetPathId">The path ID for the asset to check.</param>
-    /// <param name="followParent">If false (default), will not check the parent for a transform.</param>
-    public static ChildPPtrs FindPPtrNodes(
+    /// <param name="mainAfileInstIndex">The index of the main assets file.</param>
+    /// <param name="sharedAssetsAfileIndex">The index of the shared assets file.</param>
+    public record SceneBundleInfo(
+        int mainAfileInstIndex,
+        int sharedAssetsAfileIndex);
+
+    /// <summary>
+    /// Given a scene bundle instance, find the main assets file and the sharedAssets file
+    /// within the bundle.
+    /// </summary>
+    public static bool TryFindAssetsFiles(
         this AssetsManager mgr,
-        AssetsFileInstance afileInst,
-        long assetPathId,
-        bool followParent = false
-        )
+        BundleFileInstance sceneBun,
+        out SceneBundleInfo info)
     {
-        AssetFileInfo info = afileInst.file.GetAssetInfo(assetPathId);
+        int mainAfileIdx = -1;
+        int sharedAssetsAfileIdx = -1;
 
-        HashSet<long> internalPPtrs = [];
-        HashSet<PPtrData> externalPPtrs = [];
-        ChildPPtrs childPPtrs = new(internalPPtrs, externalPPtrs);
-
-        if (!followParent && (
-            info.TypeId == (int)AssetClassID.Transform
-            || info.TypeId == (int)AssetClassID.RectTransform
-            ))
+        List<string> names = sceneBun.file.GetAllFileNames();
+        for (int i = 0; i < names.Count; i++)
         {
-            AssetTypeValueField tfValueField = mgr.GetBaseField(afileInst, info);
-
-            childPPtrs.Add(tfValueField["m_GameObject"]);
-
-            foreach (AssetTypeValueField childVf in tfValueField["m_Children.Array"].Children)
+            if (!names[i].Contains('.'))
             {
-                childPPtrs.Add(childVf);
+                mainAfileIdx = i;
             }
-            return childPPtrs;
+            else if (names[i].EndsWith(".sharedAssets"))
+            {
+                sharedAssetsAfileIdx = i;
+            }
         }
 
-        AssetTypeTemplateField templateField = mgr.GetTemplateBaseField(afileInst, info);
-        RefTypeManager refMan = mgr.GetRefTypeManager(afileInst);
+        info = new(mainAfileIdx, sharedAssetsAfileIdx);
 
-        long assetPos = info.GetAbsoluteByteOffset(afileInst.file);
-        AssetTypeValueIterator atvIterator = new(templateField, afileInst.file.Reader, assetPos, refMan);
-
-        while (atvIterator.ReadNext())
+        if (mainAfileIdx == -1 || sharedAssetsAfileIdx == -1)
         {
-            string typeName = atvIterator.TempField.Type;
-
-            if (!typeName.StartsWith("PPtr<")) continue;
-
-            AssetTypeValueField valueField = atvIterator.ReadValueField();
-            childPPtrs.Add(valueField);
+            return false;
         }
 
-        return new(internalPPtrs, externalPPtrs);
+        return true;
     }
 
     /// <summary>
-    /// Enumerate all pptrs that are dependencies of this asset. PPtrs within the current bundle will be followed
-    /// but external pptrs will not.
+    /// Create an <see cref="AssetTypeValueIterator"></see> for the current asset file info.
+    /// 
+    /// This should only be done while the <see cref="AssetsFileInstance.LockReader"/> of the afileinst is held.
     /// </summary>
-    /// <param name="mgr">The AssetsManager in use.</param>
-    /// <param name="afileInst">The Assets file instance.</param>
-    /// <param name="assetPathId">The path ID for the asset to check.</param>
-    /// <param name="followParent">If false (default), will not check the parent for a transform.</param>
-    public static ChildPPtrs FindBundleDependentObjects(
-        this AssetsManager mgr,
-        AssetsFileInstance afileInst,
-        long assetPathId,
-        bool followParent = false
-        )
+    public static AssetTypeValueIterator CreateIterator(this AssetsManager mgr, AssetsFileInstance afileinst, AssetFileInfo info)
     {
-        HashSet<long> internalSeen = new([assetPathId]);
-        HashSet<PPtrData> externalSeen = [];
+        AssetTypeTemplateField templateField = mgr.GetTemplateBaseField(afileinst, info);
 
-        Queue<long> toProcess = new();
-        toProcess.Enqueue(assetPathId);
+        RefTypeManager refMan = mgr.GetRefTypeManager(afileinst);
 
-        // Aquire the lock for the whole procedure
-        lock (afileInst.LockReader)
+        long assetPos = info.GetAbsoluteByteOffset(afileinst.file);
+        AssetTypeValueIterator atvIterator = new(templateField, afileinst.file.Reader, assetPos, refMan);
+
+        return atvIterator;
+    }
+
+    /// <summary>
+    /// Redirect any references from the current assetfileinfo that point to source within the current bundle
+    /// to instead point to target.
+    /// 
+    /// This should be run for each asset that referenced the asset at pathID = source if it is being moved to pathID = target.
+    /// </summary>
+    public static int Redirect(this AssetsManager mgr, AssetsFileInstance afileinst, AssetFileInfo info, long source, long target)
+    {
+        int replaceCount = 0;
+
+        lock (afileinst.LockReader)
         {
-            while (toProcess.TryDequeue(out long current))
+            byte[] globalAssetData = mgr.GetBaseField(afileinst, info).WriteToByteArray();
+            AssetTypeValueIterator atvIterator = mgr.CreateIterator(afileinst, info);
+
+            while (atvIterator.ReadNext())
             {
-                ChildPPtrs childPptrs = mgr.FindPPtrNodes(afileInst, current, followParent);
+                string typeName = atvIterator.TempField.Type;
 
-                externalSeen.UnionWith(childPptrs.ExternalPaths);
+                if (!typeName.StartsWith("PPtr<")) continue;
 
-                foreach (long pathId in childPptrs.InternalPaths)
+                AssetTypeValueField valueField = atvIterator.ReadValueField();
+
+                if (valueField["m_PathID"].AsLong != source || valueField["m_FileID"].AsInt != 0)
                 {
-                    if (internalSeen.Add(pathId))
-                    {
-                        toProcess.Enqueue(pathId);
-                    }
+                    continue;                    
                 }
+
+                valueField["m_PathID"].AsLong = target;
+                byte[] newData = valueField.WriteToByteArray();
+
+                int assetStart = atvIterator.ReadPosition - newData.Length;
+                Array.Copy(newData, 0, globalAssetData, assetStart, newData.Length);
+
+                replaceCount++;
             }
+
+            info.SetNewData(globalAssetData);
         }
 
-        internalSeen.Remove(assetPathId);
+        return replaceCount;
+    }
 
-        return new(internalSeen, externalSeen);
+    /// <summary>
+    /// Write the given asset bundle to the given file.
+    /// </summary>
+    public static void WriteBundleToFile(this AssetBundleFile bunFile, string outBundlePath)
+    {
+        // Going via memory stream and performing a single large write is a lot more
+        // efficient for certain systems than writing directly.
+
+        using MemoryStream ms = new();
+        using AssetsFileWriter writer = new(ms);
+        bunFile.Write(writer);
+
+        using FileStream fileStream = new(outBundlePath, FileMode.Create, FileAccess.Write);
+        byte[] internalBuffer = ms.GetBuffer();
+        fileStream.Write(internalBuffer, 0, (int)ms.Length);
     }
 }

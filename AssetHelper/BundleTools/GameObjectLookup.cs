@@ -3,6 +3,7 @@ using AssetsTools.NET.Extra;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace Silksong.AssetHelper.BundleTools;
 
@@ -17,8 +18,9 @@ public class GameObjectLookup : IEnumerable<GameObjectLookup.GameObjectInfo>
     /// </summary>
     /// <param name="GameObjectPathId">The path ID to the game object.</param>
     /// <param name="TransformPathId">The path ID to the transform.</param>
-    /// <param name="GameObjectName">The path to the game object in the form root/.../grandparent/parent/object.</param>
-    public record GameObjectInfo(long GameObjectPathId, long TransformPathId, string GameObjectName);
+    /// <param name="GameObjectName">The name of the game object in the form root/.../grandparent/parent/object.</param>
+    /// <param name="ParentPathId">The path ID of the parent transform, or 0 if it is a root game object.</param>
+    public record GameObjectInfo(long GameObjectPathId, long TransformPathId, string GameObjectName, long ParentPathId);
 
     private readonly Dictionary<string, GameObjectInfo> _fromName;
     private readonly Dictionary<long, GameObjectInfo> _fromGameObject;
@@ -74,13 +76,13 @@ public class GameObjectLookup : IEnumerable<GameObjectLookup.GameObjectInfo>
 
             if (parentTransformPathId == 0)
             {
-                GameObjectInfo newInfo = new(goPathId, tPathId, goName);
+                GameObjectInfo newInfo = new(goPathId, tPathId, goName, 0);
                 fromTransformLookup[tPathId] = newInfo;
                 return newInfo;
             }
 
             GameObjectInfo parentInfo = DoAdd(parentTransformPathId);
-            GameObjectInfo childInfo = new(goPathId, tPathId, $"{parentInfo.GameObjectName}/{goName}");
+            GameObjectInfo childInfo = new(goPathId, tPathId, $"{parentInfo.GameObjectName}/{goName}", parentTransformPathId);
             fromTransformLookup[tPathId] = childInfo;
             return childInfo;
         }
@@ -152,11 +154,52 @@ public class GameObjectLookup : IEnumerable<GameObjectLookup.GameObjectInfo>
     /// </summary>
     public IEnumerator<GameObjectInfo> GetEnumerator()
     {
-        return _fromName.Values.GetEnumerator();
+        return _fromGameObject.Values.GetEnumerator();
     }
 
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
     }
+}
+
+/// <summary>
+/// Extension methods for GameObjectLookup instances.
+/// </summary>
+public static class GameObjectLookupExtensions
+{
+    /// <summary>
+    /// Enumerate the infos in self by depth-first search.
+    /// </summary>
+    public static IEnumerable<GameObjectLookup.GameObjectInfo> TraverseOrdered(this GameObjectLookup self)
+    {
+        Dictionary<long, List<GameObjectLookup.GameObjectInfo>> children = [];
+        foreach (GameObjectLookup.GameObjectInfo info in self)
+        {
+            if (!children.TryGetValue(info.ParentPathId, out List<GameObjectLookup.GameObjectInfo> kids))
+            {
+                kids = [];
+                children[info.ParentPathId] = kids;
+            }
+            kids.Add(info);
+        }
+
+        return InnerTraverse(0);
+
+        IEnumerable<GameObjectLookup.GameObjectInfo> InnerTraverse(long pathId)
+        {
+            if (children.TryGetValue(pathId, out List<GameObjectLookup.GameObjectInfo> kids))
+            {
+                foreach (GameObjectLookup.GameObjectInfo kid in kids.OrderBy(x => x.GameObjectName).ThenBy(x => x.TransformPathId))
+                {
+                    yield return kid;
+                    foreach (GameObjectLookup.GameObjectInfo decInfo in InnerTraverse(kid.TransformPathId))
+                    {
+                        yield return decInfo;
+                    }
+                }
+            }
+        }
+    }
+
 }

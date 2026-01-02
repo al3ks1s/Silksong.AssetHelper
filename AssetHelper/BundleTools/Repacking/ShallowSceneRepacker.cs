@@ -1,5 +1,6 @@
 ﻿using AssetsTools.NET;
 using AssetsTools.NET.Extra;
+using Silksong.AssetHelper.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -34,37 +35,45 @@ public class ShallowSceneRepacker : SceneRepacker
 
 
     /// <inheritdoc />
-    public override RepackedBundleData Repack(string sceneBundlePath, List<string> objectNames, string outBundlePath)
+    public override void Repack(string sceneBundlePath, List<string> objectNames, string outBundlePath, ref RepackedBundleData outData)
     {
         // Only support root objects
-        objectNames = objectNames.Select(x => x.Split('/')[0]).Distinct().ToList();
+        List<string> rootObjects = objectNames.Select(x => x.Split('/')[0]).Distinct().ToList();
 
-        RepackedBundleData outData = new();
         AssetsManager mgr = BundleUtils.CreateDefaultManager();
-
-        GetDefaultBundleNames(sceneBundlePath, objectNames, outBundlePath, out string newCabName, out string newBundleName);
-        outData.BundleName = newBundleName;
-        outData.CabName = newCabName;
 
         // Load the scene bundle
         BundleFileInstance sceneBun = mgr.LoadBundleFile(sceneBundlePath);
-        if (!TryFindAssetsFiles(mgr, sceneBun, out AssetsFileInstance? mainSceneAfileInst, out AssetsFileInstance? sceneSharedAssetsFileInst, out _))
+        if (!mgr.TryFindAssetsFiles(sceneBun, out BundleUtils.SceneBundleInfo sceneBundleInfo))
         {
             throw new NotSupportedException($"Could not find assets files for {sceneBundlePath}");
         }
+
+        AssetsFileInstance mainSceneAfileInst = mgr.LoadAssetsFileFromBundle(sceneBun, sceneBundleInfo.mainAfileInstIndex);
+        AssetsFileInstance sceneSharedAssetsFileInst = mgr.LoadAssetsFileFromBundle(sceneBun, sceneBundleInfo.sharedAssetsAfileIndex);
 
         AssetsFile sceneAfile = mainSceneAfileInst.file;
         AssetsFile sharedAssetsAfile = sceneSharedAssetsFileInst.file;
         string sceneCab = mainSceneAfileInst.name;
 
         Dictionary<string, BundleUtils.AssetData> gameObjects = mgr.FindRootGameObjects(
-            mainSceneAfileInst, objectNames, out List<string> missingObjects);
+            mainSceneAfileInst, rootObjects, out List<string> missingObjects);
 
         if (missingObjects.Count > 0)
         {
             AssetHelperPlugin.InstanceLogger.LogWarning($"Missing objects for bundle {sceneBundlePath}");
             AssetHelperPlugin.InstanceLogger.LogWarning(string.Join(", ", missingObjects));
         }
+
+        List<string> nonRepackedAssets = [];
+        foreach (string objName in objectNames)
+        {
+            if (missingObjects.Any(x => objName.HasPrefix(x)))
+            {
+                nonRepackedAssets.Add(objName);
+            }
+        }
+        outData.NonRepackedAssets = nonRepackedAssets;
 
         // Load a non-scene bundle to modify
         BundleFileInstance modBun = mgr.LoadBundleFile(_nonSceneBundlePath);
@@ -105,8 +114,8 @@ public class ShallowSceneRepacker : SceneRepacker
         // Update the name
         AssetFileInfo internalBundle = modAfile.AssetInfos.Where(info => info.TypeId == (int)AssetClassID.AssetBundle).First();
         AssetTypeValueField bundleData = mgr.GetBaseField(modAfileInst, internalBundle);
-        bundleData["m_Name"].AsString = newBundleName;
-        bundleData["m_AssetBundleName"].AsString = newBundleName;
+        bundleData["m_Name"].AsString = outData.BundleName;
+        bundleData["m_AssetBundleName"].AsString = outData.BundleName;
 
         // Update the dependencies on the internal bundle
         AssetTypeValueField childString = bundleData["m_Dependencies.Array"].Children[0];
@@ -126,8 +135,10 @@ public class ShallowSceneRepacker : SceneRepacker
 
         // Add assets to container, and fix the preload table
         List<AssetTypeValueField> preloadPtrs = [];
-        List<string> containerPaths = [];
+        Dictionary<string, string> containerPaths = [];
         List<AssetTypeValueField> newChildren = [];
+
+        AssetDependencies dependencies = new(mgr, mainSceneAfileInst);
 
         foreach (string objName in gameObjects.Keys)
         {
@@ -136,7 +147,7 @@ public class ShallowSceneRepacker : SceneRepacker
             int start = preloadPtrs.Count;
 
             // Collect dependent pptrs
-            BundleUtils.ChildPPtrs childPPtrs = mgr.FindBundleDependentObjects(mainSceneAfileInst, goData.Info.PathId);
+            AssetDependencies.ChildPPtrs childPPtrs = dependencies.FindBundleDeps(goData.Info.PathId);
             foreach ((int fileId, long pathId) in childPPtrs.ExternalPaths)
             {
                 AssetTypeValueField depPtr = ValueBuilder.DefaultValueFieldFromArrayTemplate(bundleData["m_PreloadTable.Array"]);
@@ -154,7 +165,7 @@ public class ShallowSceneRepacker : SceneRepacker
             int count = preloadPtrs.Count - start;
 
             string containerPath = $"{nameof(AssetHelper)}/{objName}.prefab";
-            containerPaths.Add(containerPath);
+            containerPaths.Add(containerPath, objName);
 
             AssetTypeValueField newChild = ValueBuilder.DefaultValueFieldFromArrayTemplate(bundleData["m_Container.Array"]);
             newChild["first"].AsString = containerPath;
@@ -175,13 +186,9 @@ public class ShallowSceneRepacker : SceneRepacker
         internalBundle.SetNewData(bundleData);
 
         modBunF.BlockAndDirInfo.DirectoryInfos[0].SetNewData(modAfile);
-        modBunF.BlockAndDirInfo.DirectoryInfos[0].Name = newCabName;
+        modBunF.BlockAndDirInfo.DirectoryInfos[0].Name = outData.CabName;
 
-        using (AssetsFileWriter writer = new(outBundlePath))
-        {
-            modBunF.Write(writer);
-        }
-
-        return outData;
+        modBunF.WriteBundleToFile(outBundlePath);
+        mgr.UnloadAll();
     }
 }
