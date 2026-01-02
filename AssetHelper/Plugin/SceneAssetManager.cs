@@ -14,6 +14,8 @@ namespace Silksong.AssetHelper.Plugin;
 /// </summary>
 public static class SceneAssetManager
 {
+    private static readonly Version _lastAcceptablePluginVersion = Version.Parse("0.1.0");
+
     private static RepackDataCollection? _repackData;
 
     internal static event Action? SingleRepackOperationCompleted;
@@ -45,7 +47,17 @@ public static class SceneAssetManager
                 continue;
             }
 
-            // TODO - cache invalidation based on version
+            // TODO - accept silksong version changes if the bundle hasn't changed
+            Version current = Version.Parse(AssetHelperPlugin.Version);
+            if (existingBundleData.SilksongVersion != AssetPaths.SilksongVersion
+                || !Version.TryParse(existingBundleData.PluginVersion ?? string.Empty, out Version oldPluginVersion)
+                || oldPluginVersion > current
+                || oldPluginVersion < _lastAcceptablePluginVersion
+                )
+            {
+                updatedToRepack[scene] = request;
+                continue;
+            }
 
             if (request.All(x => existingBundleData.TriedToRepack(x)))
             {
