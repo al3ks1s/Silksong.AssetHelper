@@ -1,6 +1,6 @@
 ﻿using AssetsTools.NET;
 using AssetsTools.NET.Extra;
-using Silksong.AssetHelper.Internal;
+using Silksong.AssetHelper.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,16 +17,11 @@ namespace Silksong.AssetHelper.BundleTools.Repacking;
 public class StrippedSceneRepacker : SceneRepacker
 {
     /// <inheritdoc />
-    public override RepackedBundleData Repack(string sceneBundlePath, List<string> objectNames, string outBundlePath)
+    public override void Repack(string sceneBundlePath, List<string> objectNames, string outBundlePath, ref RepackedBundleData outData)
     {
         objectNames = objectNames.GetHighestNodes();
 
-        RepackedBundleData outData = new();
         AssetsManager mgr = BundleUtils.CreateDefaultManager();
-
-        GetDefaultBundleNames(sceneBundlePath, objectNames, outBundlePath, out string newCabName, out string newBundleName);
-        outData.BundleName = newBundleName;
-        outData.CabName = newCabName;
 
         BundleFileInstance sceneBun = mgr.LoadBundleFile(sceneBundlePath);
         if (!mgr.TryFindAssetsFiles(sceneBun, out BundleUtils.SceneBundleInfo sceneBundleInfo))
@@ -69,6 +64,7 @@ public class StrippedSceneRepacker : SceneRepacker
 
         // Generate a path for each rootmost go which has a child in the request
         HashSet<string> includedContainerGos = [];
+        List<string> missingObjects = [];
         foreach (string objName in objectNames)
         {
             if (ObjPathUtil.TryFindAncestor(rootmostGos, objName, out string? ancestor, out _))
@@ -78,8 +74,10 @@ public class StrippedSceneRepacker : SceneRepacker
             else
             {
                 AssetHelperPlugin.InstanceLogger.LogWarning($"Did not find {objName} in bundle");
+                missingObjects.Add(objName);
             }
         }
+        outData.NonRepackedAssets = missingObjects;
 
         // Strip all assets that are not needed
         foreach (AssetFileInfo afileInfo in mainSceneAfileInst.file.AssetInfos.ToList())
@@ -90,11 +88,19 @@ public class StrippedSceneRepacker : SceneRepacker
             }
         }
 
-        // Move the asset at path 1 to make way for the internal bundle - TODO
+        // Determine the new path ID for the asset at path=1
+        long newOneAssetPathId = 1;
+
         if (includedPathIds.Contains(1))
         {
-            throw new NotSupportedException("I haven't moved the asset at PathID 1 yet...");
+            newOneAssetPathId = -1;
+            while (includedPathIds.Contains(newOneAssetPathId))
+            {
+                newOneAssetPathId--;
+            }            
         }
+
+        long updatedPathId(long orig) => orig == 1 ? newOneAssetPathId : orig;
 
         // Deparent transforms which are now rooted
         foreach (GameObjectInfo current in goLookup)
@@ -133,14 +139,15 @@ public class StrippedSceneRepacker : SceneRepacker
         AssetTypeValueField iBundleData = mgr.GetBaseField(sceneSharedAssetsFileInst, internalBundle);
 
         // Set simple data
-        iBundleData["m_Name"].AsString = newBundleName;
-        iBundleData["m_AssetBundleName"].AsString = newBundleName;
+        iBundleData["m_Name"].AsString = outData.BundleName;
+        iBundleData["m_AssetBundleName"].AsString = outData.BundleName;
         iBundleData["m_IsStreamedSceneAssetBundle"].AsBool = false;
         iBundleData["m_SceneHashes.Array"].Children.Clear();
 
         // Add objects to the container
         List<AssetTypeValueField> preloadPtrs = [];
         List<AssetTypeValueField> newChildren = [];
+        Dictionary<string, string> containerPaths = [];
 
         foreach (string containerGo in includedContainerGos)
         {
@@ -160,13 +167,14 @@ public class StrippedSceneRepacker : SceneRepacker
             int count = preloadPtrs.Count - start;
 
             string containerPath = $"{nameof(AssetHelper)}/{containerGo}.prefab";
+            containerPaths[containerPath] = containerGo;
 
             AssetTypeValueField newChild = ValueBuilder.DefaultValueFieldFromArrayTemplate(iBundleData["m_Container.Array"]);
             newChild["first"].AsString = containerPath;
             newChild["second.preloadIndex"].AsInt = start;
             newChild["second.preloadSize"].AsInt = count;
             newChild["second.asset.m_FileID"].AsInt = 0;
-            newChild["second.asset.m_PathID"].AsLong = cgInfo.GameObjectPathId;
+            newChild["second.asset.m_PathID"].AsLong = updatedPathId(cgInfo.GameObjectPathId);
             newChildren.Add(newChild);
         }
 
@@ -174,7 +182,33 @@ public class StrippedSceneRepacker : SceneRepacker
         iBundleData["m_PreloadTable.Array"].Children.AddRange(preloadPtrs);
         iBundleData["m_Container.Array"].Children.Clear();
         iBundleData["m_Container.Array"].Children.AddRange(newChildren);
-        outData.GameObjectAssets = includedContainerGos.ToList();
+        outData.GameObjectAssets = containerPaths;
+
+        // Move the asset at pathId = 1 to newOneAssetPathId
+        if (newOneAssetPathId != 1)
+        {
+            int redirectCount = 0;
+
+            AssetFileInfo toMove = mainSceneAfileInst.file.GetAssetInfo(1);
+            mainSceneAfileInst.file.Metadata.RemoveAssetInfo(toMove);
+            toMove.PathId = newOneAssetPathId;
+            mainSceneAfileInst.file.Metadata.AddAssetInfo(toMove);
+
+            foreach (long pathId in includedPathIds)
+            {
+                if (pathId == 1) continue;
+
+                if (!dependencies.FindImmediateDeps(pathId).InternalPaths.Contains(1))
+                {
+                    continue;
+                }
+
+                redirectCount += mgr.Redirect(mainSceneAfileInst, mainSceneAfileInst.file.GetAssetInfo(pathId), 1, newOneAssetPathId);
+            }
+
+            int locRedirect = mgr.Redirect(mainSceneAfileInst, toMove, 1, newOneAssetPathId);  // Just in case
+            AssetHelperPlugin.InstanceLogger.LogInfo($"Redirected {redirectCount} references plus {locRedirect} self-references");
+        }
 
         // Move updated internal bundle into the main assets file
         // Copy the asset bundle type tree from the shared assets to the main bundle
@@ -189,7 +223,7 @@ public class StrippedSceneRepacker : SceneRepacker
         mainSceneAfileInst.file.Metadata.AddAssetInfo(newInternalBundle);
 
         sceneBun.file.BlockAndDirInfo.DirectoryInfos[mainAfileIdx].SetNewData(mainSceneAfileInst.file);
-        sceneBun.file.BlockAndDirInfo.DirectoryInfos[mainAfileIdx].Name = newCabName;
+        sceneBun.file.BlockAndDirInfo.DirectoryInfos[mainAfileIdx].Name = outData.CabName;
 
         int tot = sceneBun.file.BlockAndDirInfo.DirectoryInfos.Count;
         for (int i = 0; i < tot; i++)
@@ -198,11 +232,7 @@ public class StrippedSceneRepacker : SceneRepacker
             sceneBun.file.BlockAndDirInfo.DirectoryInfos[i].SetRemoved();
         }
 
-        using (AssetsFileWriter writer = new(outBundlePath))
-        {
-            sceneBun.file.Write(writer);
-        }
-
-        return outData;
+        sceneBun.file.WriteBundleToFile(outBundlePath);
+        mgr.UnloadAll();
     }
 }
