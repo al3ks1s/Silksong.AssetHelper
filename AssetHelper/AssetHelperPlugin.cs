@@ -4,9 +4,14 @@ using BepInEx.Logging;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using Silksong.AssetHelper.BundleTools;
+using Silksong.AssetHelper.CatalogTools;
 using Silksong.AssetHelper.Plugin;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using UnityEngine;
+using UnityEngine.AddressableAssets;
 
 namespace Silksong.AssetHelper;
 
@@ -32,6 +37,8 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
 
         GameEvents.Hook();
 
+        Addressables.ResourceManager.ResourceProviders.Add(new ChildGameObjectProvider());
+
         // TODO - activate this
         // SceneAssetRepackManager.Hook();
 
@@ -39,6 +46,53 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
         _atHook = new ILHook(typeof(AssetTypeValueIterator).GetMethod(nameof(AssetTypeValueIterator.ReadNext)), PatchATVI);
 
         Logger.LogInfo($"Plugin {Name} ({Id}) has loaded!");
+
+        // AssetsData.InvokeAfterAddressablesLoaded(TestExecutor.CustomBundle);
+        AssetsData.InvokeAfterAddressablesLoaded(() => {
+            var p = Addressables.LoadContentCatalogAsync(Path.Combine(AssetPaths.CatalogFolder, "AssetHelper-repackedSceneCatalog.bin"));
+            var w = p.WaitForCompletion();
+            DebugTools.DumpAllAddressableAssets(w, "test2.json", true);
+            });
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.H))
+        {
+            StartCoroutine(LoadThingy());
+        }
+    }
+
+    IEnumerator LoadThingy()
+    {
+        string pkey = "AssetHelper/RepackedAssets/memory_coral_tower/Battle Scenes[Battle Scene Chamber 2/Wave 1/Coral Hunter]";
+        var locn = Addressables.ResourceLocators.Skip(2).First().AllLocations.Last();
+        Logger.LogInfo($"{locn.PrimaryKey} | {locn.ProviderId} | {locn.InternalId}");
+        var op = Addressables.LoadAssetAsync<GameObject>(locn);
+
+        yield return op;
+
+        Logger.LogInfo(op.OperationException);
+        Logger.LogInfo(op.Result.name);
+
+        GameObject alita = Instantiate(op.Result);
+
+        var fsm = alita.LocateMyFSM("Control");
+        fsm.FsmVariables.FindFsmBool("Spear Spawner").Value = false;
+
+        var ground = alita.transform.GetPositionY();
+        fsm.FsmVariables.FindFsmFloat("Tele Air Y Max").Value = ground + 8;
+        fsm.FsmVariables.FindFsmFloat("Tele Air Y Min").Value = ground + 2;
+        fsm.FsmVariables.FindFsmFloat("Tele Ground Y").Value = ground;
+
+        fsm.FsmVariables.FindFsmFloat("Tele X Max").Value = alita.transform.GetPositionX() + 11;
+        fsm.FsmVariables.FindFsmFloat("Tele X Min").Value = alita.transform.GetPositionX() - 11;
+
+        fsm.FsmVariables.FindFsmGameObject("Aiming Cursor").Value = new GameObject(alita.name + " Aim Cursor");
+
+        alita.transform.position = HeroController.instance.transform.position + new Vector3(5, 0, 0);
+
+        alita.SetActive(true);
     }
 
     /// <summary>

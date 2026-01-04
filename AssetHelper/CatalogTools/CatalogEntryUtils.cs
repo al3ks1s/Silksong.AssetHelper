@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using UnityEngine;
 using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
@@ -86,6 +87,29 @@ internal static class CatalogEntryUtils
             assetType,
             internalId,
             "UnityEngine.ResourceManagement.ResourceProviders.BundledAssetProvider",
+            new object[] { primaryKey },
+            deps,
+            null
+            );
+    }
+
+    /// <summary>
+    /// Create a catalog entry representing a child gameobject of
+    /// the gameObject loaded by parentPrimaryKey.
+    /// </summary>
+    public static ContentCatalogDataEntry CreateChildGameObjectEntry(
+        string parentPrimaryKey,
+        string relativePath,
+        out string primaryKey
+        )
+    {
+        primaryKey = $"{parentPrimaryKey}[{relativePath}]";
+        object[] deps = new object[] { parentPrimaryKey };
+
+        return new ContentCatalogDataEntry(
+            typeof(GameObject),
+            relativePath,
+            ChildGameObjectProvider.ClassProviderId,
             new object[] { primaryKey },
             deps,
             null

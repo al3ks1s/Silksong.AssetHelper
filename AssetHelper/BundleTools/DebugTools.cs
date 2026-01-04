@@ -111,13 +111,14 @@ public static class DebugTools
     /// </summary>
     /// <param name="locator"></param>
     /// <param name="fileName">The name of the file within the debug data dir.</param>
-    public static void DumpAllAddressableAssets(IResourceLocator locator, string fileName)
+    /// <param name="includeDepNames">Whether to include dependency names in the output.</param>
+    public static void DumpAllAddressableAssets(IResourceLocator locator, string fileName, bool includeDepNames = false)
     {
         List<AddressablesAssetInfo> assetInfos = [];
 
         foreach (IResourceLocation loc in locator.AllLocations)
         {
-            assetInfos.Add(AddressablesAssetInfo.FromLocation(loc));
+            assetInfos.Add(AddressablesAssetInfo.FromLocation(loc, includeDepNames));
         }
 
         assetInfos.SerializeToFileInBackground(Path.Combine(AssetPaths.DebugDataDir, fileName));
@@ -128,16 +129,20 @@ public static class DebugTools
         public string? InternalId { get; init; }
         public string? ProviderId { get; init; }
         public int DependencyCount { get; init; }
+        public List<string>? Dependencies { get; init; }
         public string? PrimaryKey { get; init; }
         public Type? ResourceType { get; init; }
 
-        public static AddressablesAssetInfo FromLocation(IResourceLocation loc)
+        public static AddressablesAssetInfo FromLocation(IResourceLocation loc, bool includeDepNames = false)
         {
+            List<string>? depNames = includeDepNames ? loc.Dependencies?.Select(x => $"[{x?.PrimaryKey} | {x?.InternalId}]").ToList() : null;
+
             return new()
             {
                 InternalId = loc.InternalId,
                 ProviderId = loc.ProviderId,
                 DependencyCount = loc.Dependencies?.Count ?? 0,
+                Dependencies = depNames,
                 PrimaryKey = loc.PrimaryKey,
                 ResourceType = loc.ResourceType,
             };

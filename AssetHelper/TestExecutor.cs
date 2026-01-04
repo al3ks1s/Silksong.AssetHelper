@@ -2,6 +2,7 @@
 using Silksong.AssetHelper.BundleTools.Repacking;
 using Silksong.AssetHelper.Internal;
 using Silksong.AssetHelper.LoadedAssets;
+using Silksong.AssetHelper.Plugin;
 using Silksong.UnityHelper.Extensions;
 using System;
 using System.Collections;
@@ -60,6 +61,25 @@ internal static class TestExecutor
 
         data.SerializeToFile(Path.Combine(AssetPaths.AssemblyFolder, "ser_dump", "repack_data.json"));
         AssetHelperPlugin.InstanceLogger.LogInfo($"All scenes complete {sw.ElapsedMilliseconds} ms");
+    }
+
+
+    public static void CustomBundle()
+    {
+        // Create bundle
+        StrippedSceneRepacker repacker = new();
+        RepackedBundleData data = repacker.Repack(
+            AssetPaths.GetScenePath("Memory_coral_tower"),
+            ["Battle Scenes"],
+            Path.Combine(AssetPaths.AssemblyFolder, "battlescenes.bundle"));
+
+        // Create catalog
+        Dictionary<string, RepackedBundleData> lookup = new();
+        lookup["memory_coral_tower"] = data;
+        string path = SceneAssetRepackManager.CreateCatalog(lookup);
+
+        var lr = Addressables.LoadContentCatalogAsync(path).WaitForCompletion();
+        DebugTools.DumpAllAddressableAssets(lr, "test.json");
     }
 
 

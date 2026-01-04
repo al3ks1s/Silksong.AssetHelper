@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
-using System.Text;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.ResourceLocators;
-using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.Util;
 
 namespace Silksong.AssetHelper.CatalogTools;

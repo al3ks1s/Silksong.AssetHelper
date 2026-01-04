@@ -196,6 +196,12 @@ internal static class SceneAssetRepackManager
         allEntries.AddRange(bundlesToInclude.Select(x => bundleLookup[x]));
         allEntries.AddRange(addedEntries);
 
+        allEntries.Add(CatalogEntryUtils.CreateChildGameObjectEntry(
+            "AssetHelper/RepackedAssets/memory_coral_tower/Battle Scenes",
+            "Battle Scene Chamber 2/Wave 1/Coral Hunter",
+            out _
+            ));
+
         Log($"Placed {allEntries.Count} entries in catalog list");
 
         string catalogPath = CatalogUtils.WriteCatalog(allEntries, "repackedSceneCatalog");
