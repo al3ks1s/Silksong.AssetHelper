@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
+using System.Linq;
 using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
-using UnityEngine.SceneManagement;
 
 namespace Silksong.AssetHelper.CatalogTools;
 
@@ -16,11 +15,17 @@ internal static class CatalogEntryUtils
     /// Creates a catalog entry for repacked scene bundles.
     /// 
     /// </summary>
-    /// <param name="key">The primary key of the bundle.</param>
+    /// <param name="primaryKey">The primary key of the bundle.</param>
     /// <param name="bundlePath">The fully qualified path to the bundle on the filesystem</param>
     /// <param name="internalBundleName">The name of the AssetBundle asset in the bundle.</param>
-    /// <param name="dependencyKeys">List of all the primary keys of the bundle dependencies. Note: All keys found in the dependencies must have their corresponding entry in the catalog</param>
-    public static ContentCatalogDataEntry CreateBundleEntry(string key, string bundlePath, string internalBundleName, List<string> dependencyKeys)
+    /// <param name="dependencyKeys">List of all the primary keys of the bundle dependencies.
+    /// Note: All keys found in the dependencies must have their corresponding entry in the catalog.</param>
+    public static ContentCatalogDataEntry CreateBundleEntry(
+        string primaryKey,
+        string bundlePath,
+        string internalBundleName,
+        List<string> dependencyKeys
+        )
     {
 
         AssetBundleRequestOptions requestOptions = new AssetBundleRequestOptions();
@@ -40,43 +45,76 @@ internal static class CatalogEntryUtils
             typeof(IAssetBundleResource),
             bundlePath,
             "UnityEngine.ResourceManagement.ResourceProviders.AssetBundleProvider",
-            new object[] { key },
+            new object[] { primaryKey },
             dependencyKeys,
             requestOptions
-
         );
 
         return bundleEntry;
     }
 
-    /// <summary>
-    /// Creates a catalog entry for bundled assets.
-    /// </summary>
-    /// <param name="addressablePath">Addressable path of the asset. This primary key is both the key of an asset in a bundle and the key used to load the asset using the Addressables package</param>
-    /// <param name="assetType">Unity type of the asset. Eg: GameObject</param>
-    /// <param name="ownerBundleKey">Primary key of the bundle containing the asset.</param>
-    public static ContentCatalogDataEntry CreateAssetEntry(string addressablePath, Type assetType, string ownerBundleKey)
+    /// <inheritdoc cref="CreateAssetEntry(string, Type, List{string}, out string)" />
+    public static ContentCatalogDataEntry CreateAssetEntry(
+        string internalId,
+        Type assetType,
+        List<string> dependencyKeys,
+        out string primaryKey
+    )
     {
-        return new ContentCatalogDataEntry(
-            assetType,
-            addressablePath,
-            "UnityEngine.ResourceManagement.ResourceProviders.BundledAssetProvider",
-            new object[] { addressablePath },
-            new object[] { ownerBundleKey },
-            null
-        );
+        primaryKey = internalId;
+
+        return CreateAssetEntry(internalId, assetType, dependencyKeys, primaryKey);
     }
 
-    public static ContentCatalogDataEntry CreateEntryFromLocation(IResourceLocation location)
+    /// <summary>
+    /// Creates a catalog entry for a bundled asset.
+    /// </summary>
+    /// <param name="internalId">The internal ID of the asset. This is the name of the asset within the bundle.</param>
+    /// <param name="assetType">Unity type of the asset. Eg: GameObject</param>
+    /// <param name="dependencyKeys">Primary keys of the bundle dependencies. These should be in the catalog.</param>
+    /// <param name="primaryKey">The primary key used to access the asset with Addressables.</param>
+    public static ContentCatalogDataEntry CreateAssetEntry(
+        string internalId,
+        Type assetType,
+        List<string> dependencyKeys,
+        string primaryKey
+        )
+    {
+        object[] deps = dependencyKeys.Cast<object>().ToArray();
+
+        return new ContentCatalogDataEntry(
+            assetType,
+            internalId,
+            "UnityEngine.ResourceManagement.ResourceProviders.BundledAssetProvider",
+            new object[] { primaryKey },
+            deps,
+            null
+            );
+    }
+
+    /// <inheritdoc cref="CreateEntryFromLocation(IResourceLocation, string)" />
+    public static ContentCatalogDataEntry CreateEntryFromLocation(IResourceLocation location, out string primaryKey)
+    {
+        primaryKey = $"{nameof(AssetHelper)}:{location.PrimaryKey}";
+
+        return CreateEntryFromLocation(location, primaryKey);
+    }
+
+    /// <summary>
+    /// Create a catalog entry based on the given location.
+    /// </summary>
+    /// <param name="location">The location.</param>
+    /// <param name="primaryKey">The primary key for the new catalog entry.</param>
+    /// <returns></returns>
+    public static ContentCatalogDataEntry CreateEntryFromLocation(IResourceLocation location, string primaryKey)
     {
         return new ContentCatalogDataEntry(
             location.ResourceType,
             location.InternalId,
             location.ProviderId,
-            new object[] { nameof(AssetHelper) + location.PrimaryKey },
+            new object[] { primaryKey },
             null,
             location.Data
         );
     }
-
 }

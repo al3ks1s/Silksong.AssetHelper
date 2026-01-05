@@ -15,7 +15,7 @@ internal class CachedObject<T> where T : class
     /// The last acceptable version for cached data. When making a change that impacts cached data,
     /// this number should be increased.
     /// </summary>
-    private static readonly Version _lastAcceptableVersion = Version.Parse("0.1.0");
+    private static readonly Version _lastAcceptablePluginVersion = Version.Parse("0.1.0");
 
     private CachedObject() { }
         
@@ -41,7 +41,7 @@ internal class CachedObject<T> where T : class
         {
             return false;
         }
-        if (fromCache < _lastAcceptableVersion)
+        if (fromCache < _lastAcceptablePluginVersion)
         {
             return false;
         }
