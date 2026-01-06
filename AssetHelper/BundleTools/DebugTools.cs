@@ -11,9 +11,9 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
-using NameListLookup = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
 using AssetsTools.NET.Extra;
 using UnityEngine.AddressableAssets.ResourceLocators;
+using NameListLookup = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
 
 namespace Silksong.AssetHelper.BundleTools;
 
