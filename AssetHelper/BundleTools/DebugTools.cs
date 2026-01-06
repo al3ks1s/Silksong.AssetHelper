@@ -115,7 +115,6 @@ public static class DebugTools
     public static void DumpAllAddressableAssets(IResourceLocator locator, string fileName, bool includeDepNames = false)
     {
         List<AddressablesAssetInfo> assetInfos = [];
-
         foreach (IResourceLocation loc in locator.AllLocations)
         {
             assetInfos.Add(AddressablesAssetInfo.FromLocation(loc, includeDepNames));
@@ -151,7 +150,7 @@ public static class DebugTools
 
     private static Dictionary<string, string>? _bundleNameLookup;
 
-    private static Dictionary<string, string> GenerateBundleNameLookup()
+    public static Dictionary<string, string> GenerateBundleNameLookup()
     {
         Dictionary<string, string> lookup = [];
 

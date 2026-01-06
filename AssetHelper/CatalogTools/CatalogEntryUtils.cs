@@ -62,7 +62,7 @@ internal static class CatalogEntryUtils
         out string primaryKey
     )
     {
-        primaryKey = internalId;
+        primaryKey = $"AssetHelper/Addressables/{internalId}";
 
         return CreateAssetEntry(internalId, assetType, dependencyKeys, primaryKey);
     }
@@ -103,7 +103,7 @@ internal static class CatalogEntryUtils
         out string primaryKey
         )
     {
-        primaryKey = $"{parentPrimaryKey}[{relativePath}]";
+        primaryKey = $"{parentPrimaryKey}/{relativePath}";
         object[] deps = new object[] { parentPrimaryKey };
 
         return new ContentCatalogDataEntry(

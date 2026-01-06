@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
@@ -24,9 +25,7 @@ internal class ChildGameObjectProvider : ResourceProviderBase
 
     public override void Provide(ProvideHandle provideHandle)
     {
-        AssetHelperPlugin.InstanceLogger.LogInfo($"CHILD LOAD");
-        AssetHelperPlugin.InstanceLogger.LogInfo($"{provideHandle.Location.InternalId}\n{provideHandle.DependencyCount}");
-
+                
         List<object> deps = [];
         provideHandle.GetDependencies(deps);
 

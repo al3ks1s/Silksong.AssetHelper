@@ -1,5 +1,8 @@
-﻿using Silksong.AssetHelper.BundleTools;
+﻿using AssetsTools.NET;
+using AssetsTools.NET.Extra;
+using Silksong.AssetHelper.BundleTools;
 using Silksong.AssetHelper.BundleTools.Repacking;
+using Silksong.AssetHelper.CatalogTools;
 using Silksong.AssetHelper.Internal;
 using Silksong.AssetHelper.LoadedAssets;
 using Silksong.AssetHelper.Plugin;
@@ -10,8 +13,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.AddressableAssets.ResourceLocators;
+using UnityEngine.ResourceManagement.ResourceLocations;
+using UnityEngine.ResourceManagement.ResourceProviders;
+using RepackDataCollection = System.Collections.Generic.Dictionary<string, Silksong.AssetHelper.BundleTools.RepackedBundleData>;
 
 namespace Silksong.AssetHelper;
 
@@ -22,6 +30,376 @@ namespace Silksong.AssetHelper;
 internal static class TestExecutor
 {
     public static int Completed { get;private set; }
+
+    public static void TestCatalogSerialization()
+    {
+        // Create a new catalog with all non-scene bundles and all container assets within those bundles
+
+        Stopwatch gatherSw = Stopwatch.StartNew();
+        AssetsManager mgr = new();
+
+        List<ContentCatalogDataEntry> bundleLocs = new();
+        List<ContentCatalogDataEntry> assetLocs = new();
+
+        foreach (IResourceLocation locn in Addressables.ResourceLocators.First().AllLocations)
+        {
+            if (locn.ResourceType != typeof(IAssetBundleResource)) continue;
+            if (locn.PrimaryKey.StartsWith("scenes_scenes_scenes")) continue;
+            
+            bundleLocs.Add(CatalogEntryUtils.CreateEntryFromLocation(locn, out string primaryKey));
+
+            using (MemoryStream ms = new(File.ReadAllBytes(locn.InternalId)))
+            {
+                BundleFileInstance bun = mgr.LoadBundleFile(ms, locn.PrimaryKey);
+                AssetsFileInstance afi = mgr.LoadAssetsFileFromBundle(bun, 0);
+                AssetTypeValueField iBundle = mgr.GetBaseField(afi, 1);
+
+                foreach (AssetTypeValueField ctrEntry in iBundle["m_Container.Array"].Children)
+                {
+                    string name = ctrEntry["first"].AsString;
+
+                    // TODO - should figure out the object type properly...
+                    assetLocs.Add(CatalogEntryUtils.CreateAssetEntry($"{name}", typeof(UObject), new List<string> { $"{nameof(AssetHelper)}:{locn.PrimaryKey}" }, out string pk));
+                }
+                mgr.UnloadAll();
+            }
+        }
+        gatherSw.Stop();
+
+        //AssetHelperPlugin.InstanceLogger.LogInfo($"Gathered catalog entries in {gatherSw.ElapsedMilliseconds} ms");
+        List<ContentCatalogDataEntry> catalog = [.. bundleLocs, .. assetLocs];
+        AssetHelperPlugin.InstanceLogger.LogInfo($"Gathered {catalog.Count} catalog entries in {gatherSw.ElapsedMilliseconds} ms");
+
+        Stopwatch writeSw = Stopwatch.StartNew();
+        CatalogUtils.WriteCatalog(catalog, "testCatalog");
+        writeSw.Stop();
+        AssetHelperPlugin.InstanceLogger.LogInfo($"Wrote catalog in {writeSw.ElapsedMilliseconds} ms");
+        AssetBundle.UnloadAllAssetBundles(false);
+        var p = Addressables.LoadContentCatalogAsync(Path.Combine(AssetPaths.CatalogFolder, "AssetHelper-testCatalog.bin"));
+        var locr = p.WaitForCompletion();
+
+        DebugTools.DumpAllAddressableAssets(locr, "nonscene.txt",true);
+
+        var locnn = locr.AllLocations.Where(f => f.PrimaryKey.Contains("Assets/Prefabs/UI/Fast Travel Map.prefab")).First();
+        var handle = Addressables.LoadAssetAsync<GameObject>(locnn);
+        handle.WaitForCompletion();
+
+        AssetHelperPlugin.InstanceLogger.LogInfo($"{handle.Status}");
+        AssetHelperPlugin.InstanceLogger.LogInfo($"{handle.OperationException}");
+
+    }
+
+    public static void CreateFullNonSceneCatalog()
+    {
+        // Create a new catalog with all non-scene bundles and all container assets within those bundles
+
+        Stopwatch gatherSw = Stopwatch.StartNew();
+        AssetsManager mgr = new();
+
+        // TODO - clean up primary keys
+        List<ContentCatalogDataEntry> bundleLocs = new();
+        List<ContentCatalogDataEntry> assetLocs = new();
+
+        Dictionary<string, string> cab2key = new();
+        foreach ((string cab, string name) in BundleDeps.CabLookup)
+        {
+            string origPrimaryKey = AssetsData.ToBundleKey(name);
+            cab2key[cab] = nameof(AssetHelper) + origPrimaryKey;
+        }
+
+        foreach (IResourceLocation locn in Addressables.ResourceLocators.First().AllLocations)
+        {
+            if (locn.ResourceType != typeof(IAssetBundleResource)) continue;
+            if (locn.PrimaryKey.StartsWith("scenes_scenes_scenes")) continue;
+
+            bundleLocs.Add(CatalogEntryUtils.CreateEntryFromLocation(locn, nameof(AssetHelper) + locn.PrimaryKey));
+
+            using (MemoryStream ms = new(File.ReadAllBytes(locn.InternalId)))
+            {
+                BundleFileInstance bun = mgr.LoadBundleFile(ms, locn.PrimaryKey);
+                AssetsFileInstance afi = mgr.LoadAssetsFileFromBundle(bun, 0);
+                AssetTypeValueField iBundle = mgr.GetBaseField(afi, 1);
+
+                List<string> deps = afi.file.Metadata.Externals
+                    .Select(x => x.OriginalPathName.Split("/")[^1].ToLowerInvariant())
+                    .Where(x => x.StartsWith("cab"))
+                    .Select(x => cab2key[x])
+                    .Prepend(nameof(AssetHelper) + locn.PrimaryKey)
+                    .ToList();
+
+                foreach (AssetTypeValueField ctrEntry in iBundle["m_Container.Array"].Children)
+                {
+                    string name = ctrEntry["first"].AsString;
+
+                    // TODO - should figure out the object type properly...
+                    assetLocs.Add(CatalogEntryUtils.CreateAssetEntry($"{name}", typeof(UObject), deps, out _));
+                }
+                mgr.UnloadAll();
+            }
+        }
+        gatherSw.Stop();
+        AssetHelperPlugin.InstanceLogger.LogInfo($"Gathered catalog entries in {gatherSw.ElapsedMilliseconds} ms");
+
+        List<ContentCatalogDataEntry> catalog = [.. bundleLocs, .. assetLocs];
+
+        Stopwatch writeSw = Stopwatch.StartNew();
+        string catalogPath = CatalogUtils.WriteCatalog(catalog, "testCatalog");
+        writeSw.Stop();
+        AssetHelperPlugin.InstanceLogger.LogInfo($"Wrote catalog in {writeSw.ElapsedMilliseconds} ms");
+
+        Stopwatch loadSw = Stopwatch.StartNew();
+        IResourceLocator lr = Addressables.LoadContentCatalogAsync(catalogPath).WaitForCompletion();
+        loadSw.Stop();
+        AssetHelperPlugin.InstanceLogger.LogInfo($"Loaded catalog in {loadSw.ElapsedMilliseconds} ms");
+        DebugTools.DumpAllAddressableAssets(lr, "full_non_scene.json", true);
+
+        AssetHelperPlugin.InstanceLogger.LogInfo($"starting lookup");
+        //AssetBundle.UnloadAllAssetBundles(false);
+        var lookup = DebugTools.GenerateBundleNameLookup();
+        //DebugTools.GetLoadedBundleNames(out List<string> names, out List<string> unknown);
+
+        AssetHelperPlugin.InstanceLogger.LogInfo($"{lookup["shopui_assets_all.bundle"]}");
+
+        AssetHelperPlugin.InstanceLogger.LogInfo($"Loaded: {AssetBundle.GetAllLoadedAssetBundles().Count()}");
+
+        var locnn = lr.AllLocations.Where(f => f.PrimaryKey.Contains("Assets/Prefabs/UI/Fast Travel Map.prefab")).First();
+        var handle = Addressables.LoadAssetAsync<GameObject>(locnn);
+        handle.WaitForCompletion();
+
+        AssetHelperPlugin.InstanceLogger.LogInfo($"Loaded: {AssetBundle.GetAllLoadedAssetBundles().Count()}");
+        AssetHelperPlugin.InstanceLogger.LogInfo($"{handle.Status}");
+        AssetHelperPlugin.InstanceLogger.LogInfo($"{handle.OperationException}");
+    }
+
+    public static void TestCatalogSerialization2()
+    {
+        // Create a new catalog with all non-scene bundles and all container assets within those bundles
+
+        Stopwatch gatherSw = Stopwatch.StartNew();
+        long lastMem = 0;
+        void Log(string msg, [CallerLineNumber] int lineno = -1) => AssetHelperPlugin.InstanceLogger.LogInfo($"{msg} [@{lineno}] [{gatherSw.ElapsedMilliseconds} ms] GC:{GC.GetTotalMemory(true) - lastMem}");
+        AssetsManager mgr = new();
+
+        List<ContentCatalogDataEntry> bundleLocs = new();
+        List<ContentCatalogDataEntry> assetLocs = new();
+
+        Dictionary<string, string> cab2key = new();
+        foreach ((string cab, string name) in BundleDeps.CabLookup)
+        {
+            string origPrimaryKey = AssetsData.ToBundleKey(name);
+            cab2key[cab] = nameof(AssetHelper) + ":" + origPrimaryKey;
+        }
+
+        //Log($"Blabla"); lastMem = GC.GetTotalMemory(true);
+        foreach (IResourceLocation locn in Addressables.ResourceLocators.First().AllLocations)
+        {
+            if (locn.ResourceType != typeof(IAssetBundleResource)) continue;
+            if (locn.PrimaryKey.StartsWith("scenes_scenes_scenes")) continue;
+
+            //Log($"Bundle: {locn.PrimaryKey}"); lastMem = GC.GetTotalMemory(true);
+            bundleLocs.Add(CatalogEntryUtils.CreateEntryFromLocation(locn, out _));
+
+            using (MemoryStream ms = new(File.ReadAllBytes(locn.InternalId)))
+            {
+                BundleFileInstance bun = mgr.LoadBundleFile(ms, locn.PrimaryKey);
+                //Log($"Bundle loaded"); lastMem = GC.GetTotalMemory(true);
+                AssetsFileInstance afi = mgr.LoadAssetsFileFromBundle(bun, 0);
+                //Log($"FileInstance"); lastMem = GC.GetTotalMemory(true);
+                AssetTypeValueField iBundle = mgr.GetBaseField(afi, 1);
+                //Log($"Bundle base field"); lastMem = GC.GetTotalMemory(true);
+
+                List<string> deps = afi.file.Metadata.Externals
+                    .Select(x => x.OriginalPathName.Split("/")[^1].ToLowerInvariant())
+                    .Where(x => x.StartsWith("cab"))
+                    .Select(x => cab2key[x])
+                    .Prepend($"{nameof(AssetHelper)}:{locn.PrimaryKey}")
+                    .ToList();
+
+                foreach (AssetTypeValueField ctrEntry in iBundle["m_Container.Array"].Children)
+                {
+                    string name = ctrEntry["first"].AsString;
+
+                    // TODO - should figure out the object type properly...
+                    if (!name.StartsWith("Assets/"))
+                    {
+                        AssetHelperPlugin.InstanceLogger.LogMessage(name);
+                    }
+                    assetLocs.Add(CatalogEntryUtils.CreateAssetEntry($"{name}", typeof(UObject), deps, out _));
+                }
+
+                //Log($"Catalog entry"); lastMem = GC.GetTotalMemory(true);
+                mgr.UnloadAll();
+            }
+        }
+        gatherSw.Stop();
+        //AssetHelperPlugin.InstanceLogger.LogInfo($"Gathered catalog entries in {gatherSw.ElapsedMilliseconds} ms");
+
+        List<ContentCatalogDataEntry> catalog = [.. bundleLocs, .. assetLocs];
+        AssetHelperPlugin.InstanceLogger.LogInfo($"Gathered {catalog.Count} catalog entries in {gatherSw.ElapsedMilliseconds} ms");
+        
+        Stopwatch writeSw = Stopwatch.StartNew();
+        CatalogUtils.WriteCatalog(catalog, "testCatalog");
+
+        writeSw.Stop();
+        AssetHelperPlugin.InstanceLogger.LogInfo($"Wrote catalog in {writeSw.ElapsedMilliseconds} ms");
+        AssetBundle.UnloadAllAssetBundles(false);
+        var p = Addressables.LoadContentCatalogAsync(Path.Combine(AssetPaths.CatalogFolder, "AssetHelper-testCatalog.bin"));
+        var locr = p.WaitForCompletion();
+
+        DebugTools.DumpAllAddressableAssets(locr, "nonscene.txt", true);
+
+        var locnn = locr.AllLocations.Where(f => f.PrimaryKey.Contains("Assets/Prefabs/UI/Fast Travel Map.prefab")).First();
+        var handle = Addressables.LoadAssetAsync<GameObject>(locnn);
+        handle.WaitForCompletion();
+
+        AssetHelperPlugin.InstanceLogger.LogInfo($"{handle.Status}");
+        AssetHelperPlugin.InstanceLogger.LogInfo($"{handle.OperationException}");
+
+    }
+
+    internal static string CreateCatalog(RepackDataCollection data)
+    {
+        Stopwatch sw = Stopwatch.StartNew();
+        void Log(string msg, [CallerLineNumber] int lineno = -1) => AssetHelperPlugin.InstanceLogger.LogInfo($"{msg} [@{lineno}] [{sw.ElapsedMilliseconds} ms]");
+        Log("Started");
+
+        List<ContentCatalogDataEntry> addedEntries = [];
+        Dictionary<string, ContentCatalogDataEntry> bundleLookup = [];
+        Dictionary<string, string> pkLookup = [];
+        HashSet<string> bundlesToInclude = [];
+
+        foreach (IResourceLocation location in Addressables.ResourceLocators.First().AllLocations)
+        {
+            if (location.ResourceType != typeof(IAssetBundleResource)) continue;
+            if (location.PrimaryKey.StartsWith("scenes_scenes_scenes")) continue;
+
+            if (!AssetsData.TryStrip(location.PrimaryKey, out string? stripped)) continue;
+            bundleLookup[stripped] = CatalogEntryUtils.CreateEntryFromLocation(location, out string newPrimaryKey);
+            pkLookup[stripped] = newPrimaryKey;
+        }
+
+        Log($"Created {bundleLookup.Count} existing bundle entries");
+
+        foreach ((string scene, RepackedBundleData bundleData) in data)
+        {
+            // Create an entry for the bundle
+            string repackedSceneBundleKey = $"AssetHelper/RepackedScenes/{scene}";
+
+            ContentCatalogDataEntry bundleEntry = CatalogEntryUtils.CreateBundleEntry(
+                repackedSceneBundleKey,
+                Path.Combine(AssetPaths.AssemblyFolder, "ser_dump", $"repacked_{scene}.bundle"),
+                bundleData.BundleName!,
+                []);
+            addedEntries.Add(bundleEntry);
+
+            List<string> dependencyKeys = [repackedSceneBundleKey];
+            foreach (string dep in BundleDeps.DetermineDirectDeps($"scenes_scenes_scenes/{scene}.bundle"))
+            {
+                string depKey = dep.Replace(".bundle", "");
+                bundlesToInclude.Add(depKey);
+                dependencyKeys.Add(pkLookup[depKey]);
+            }
+
+            foreach ((string containerPath, string objPath) in bundleData.GameObjectAssets ?? [])
+            {
+                ContentCatalogDataEntry entry = CatalogEntryUtils.CreateAssetEntry(
+                    $"AssetHelper/RepackedAssets/{scene}/{objPath}",
+                    typeof(GameObject),
+                    dependencyKeys,
+                    out string pki);
+                addedEntries.Add(entry);
+            }
+        }
+
+        List<ContentCatalogDataEntry> allEntries = new();
+        allEntries.AddRange(bundlesToInclude.Select(x => bundleLookup[x]));
+        allEntries.AddRange(addedEntries);
+
+        Log($"Placed {allEntries.Count} entries in catalog list");
+
+        string catalogPath = CatalogUtils.WriteCatalog(allEntries, "repackedSceneCatalog");
+
+        Log("Wrote catalog");
+
+        return catalogPath;
+    }
+
+    internal static string CreateCatalog2(RepackDataCollection data)
+    {
+        // TODO - clean this up
+
+        Stopwatch sw = Stopwatch.StartNew();
+        void Log(string msg, [CallerLineNumber] int lineno = -1) => AssetHelperPlugin.InstanceLogger.LogInfo($"{msg} [@{lineno}] [{sw.ElapsedMilliseconds} ms]");
+        Log("Started");
+
+        List<ContentCatalogDataEntry> addedEntries = [];
+        Dictionary<string, ContentCatalogDataEntry> bundleLookup = [];
+        Dictionary<string, string> pkLookup = [];
+        HashSet<string> bundlesToInclude = [];
+
+        foreach (IResourceLocation location in Addressables.ResourceLocators.First().AllLocations)
+        {
+            if (location.ResourceType != typeof(IAssetBundleResource)) continue;
+            if (location.PrimaryKey.StartsWith("scenes_scenes_scenes")) continue;
+
+            if (!AssetsData.TryStrip(location.PrimaryKey, out string? stripped)) continue;
+            bundleLookup[stripped] = CatalogEntryUtils.CreateEntryFromLocation(location, out string newPrimaryKey);
+            pkLookup[stripped] = newPrimaryKey;
+        }
+
+        Log($"Created {bundleLookup.Count} existing bundle entries");
+
+        foreach ((string scene, RepackedBundleData bundleData) in data)
+        {
+            // Create an entry for the bundle
+            string repackedSceneBundleKey = $"AssetHelper/RepackedScenes/{scene}";
+
+            ContentCatalogDataEntry bundleEntry = CatalogEntryUtils.CreateBundleEntry(
+                repackedSceneBundleKey,
+                Path.Combine(AssetPaths.AssemblyFolder, "ser_dump", $"repacked_{scene}.bundle"),
+                bundleData.BundleName!,
+                []);
+            addedEntries.Add(bundleEntry);
+
+            List<string> dependencyKeys = [repackedSceneBundleKey];
+            foreach (string dep in BundleDeps.DetermineDirectDeps($"scenes_scenes_scenes/{scene}.bundle"))
+            {
+                string depKey = dep.Replace(".bundle", "");
+                bundlesToInclude.Add(depKey);
+                dependencyKeys.Add(pkLookup[depKey]);
+            }
+
+            foreach ((string containerPath, string objPath) in bundleData.GameObjectAssets ?? [])
+            {
+                ContentCatalogDataEntry entry = CatalogEntryUtils.CreateAssetEntry(
+                    containerPath,
+                    typeof(GameObject),
+                    dependencyKeys,
+                    $"AssetHelper/RepackedAssets/{scene}/{objPath}"
+                    );
+                addedEntries.Add(entry);
+            }
+        }
+
+        List<ContentCatalogDataEntry> allEntries = new();
+        allEntries.AddRange(bundlesToInclude.Select(x => bundleLookup[x]));
+        allEntries.AddRange(addedEntries);
+
+        allEntries.Add(CatalogEntryUtils.CreateChildGameObjectEntry(
+            "AssetHelper/RepackedAssets/memory_coral_tower/Battle Scenes",
+            "Battle Scene Chamber 2/Wave 1/Coral Hunter",
+            out _
+            ));
+
+        Log($"Placed {allEntries.Count} entries in catalog list");
+
+        string catalogPath = CatalogUtils.WriteCatalog(allEntries, "repackedSceneCatalog");
+
+        Log("Wrote catalog");
+
+        return catalogPath;
+    }
+
 
     public static void GenFromFile()
     {
@@ -41,6 +419,8 @@ internal static class TestExecutor
         SceneRepacker r = new StrippedSceneRepacker();
         Dictionary<string, RepackedBundleData> data = [];
 
+        CustomCatalogBuilder ccb = new CustomCatalogBuilder("repackedSceneCatalog");
+        
         Stopwatch sw = Stopwatch.StartNew();
         foreach ((string scene, List<string> objs) in rpData!)
         {
@@ -48,6 +428,7 @@ internal static class TestExecutor
             {
                 Stopwatch miniSw = Stopwatch.StartNew();
                 RepackedBundleData dat = r.Repack(AssetPaths.GetScenePath(scene), objs, Path.Combine(AssetPaths.AssemblyFolder, "ser_dump", $"repacked_{scene}.bundle"));
+                ccb.AddRepackedSceneData(scene, dat, Path.Combine(AssetPaths.AssemblyFolder, "ser_dump", $"repacked_{scene}.bundle"));
                 data[scene] = dat;
                 miniSw.Stop();
                 AssetHelperPlugin.InstanceLogger.LogInfo($"Scene {scene} complete {miniSw.ElapsedMilliseconds} ms");
@@ -58,9 +439,13 @@ internal static class TestExecutor
                 AssetHelperPlugin.InstanceLogger.LogError($"Scene {scene} error\n" + ex);
             }
         }
-
+        
         data.SerializeToFile(Path.Combine(AssetPaths.AssemblyFolder, "ser_dump", "repack_data.json"));
         AssetHelperPlugin.InstanceLogger.LogInfo($"All scenes complete {sw.ElapsedMilliseconds} ms");
+        AssetHelperPlugin.InstanceLogger.LogInfo($"Starting architect catalog");
+
+        ccb.Build();
+
     }
 
 
@@ -76,10 +461,17 @@ internal static class TestExecutor
         // Create catalog
         Dictionary<string, RepackedBundleData> lookup = new();
         lookup["memory_coral_tower"] = data;
-        string path = SceneAssetRepackManager.CreateCatalog(lookup);
 
-        var lr = Addressables.LoadContentCatalogAsync(path).WaitForCompletion();
-        DebugTools.DumpAllAddressableAssets(lr, "test.json");
+        CustomCatalogBuilder ccb = new CustomCatalogBuilder("repackedSceneCatalog");
+        ccb.AddRepackedSceneData("memory_coral_tower", data, Path.Combine(AssetPaths.AssemblyFolder, "battlescenes.bundle"));
+        
+        ccb.addEntry(CatalogEntryUtils.CreateChildGameObjectEntry(
+            "repackedSceneCatalog/RepackedAssets/memory_coral_tower/Battle Scenes",
+            "Battle Scene Chamber 2/Wave 1/Coral Hunter",
+            out _
+            ));
+        string path  = ccb.Build();
+
     }
 
 
@@ -193,5 +585,8 @@ internal static class TestExecutor
 
             return new string(res);
         }
+
     }
+
+
 }

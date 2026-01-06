@@ -1,9 +1,12 @@
 ﻿using AssetsTools.NET;
 using AssetsTools.NET.Extra;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Silksong.AssetHelper.BundleTools;
 
@@ -62,7 +65,10 @@ public class GameObjectLookup : IEnumerable<GameObjectLookup.GameObjectInfo>
         Dictionary<long, string> go2name = [];
         Dictionary<long, long> tf2parent = [];
         Dictionary<long, long> tf2go = [];
+        Stopwatch sw = Stopwatch.StartNew();
+        void Log(string msg, [CallerLineNumber] int lineno = -1) => AssetHelperPlugin.InstanceLogger.LogInfo($"{msg} [@{lineno}] [{sw.ElapsedMilliseconds} ms] Allocated:[{GC.GetTotalMemory(true) / 1000000}]");
 
+        //Log("starting lookup");
         // Iterate over the assets files once
         foreach (AssetFileInfo info in afileInst.file.AssetInfos)
         {
@@ -77,7 +83,10 @@ public class GameObjectLookup : IEnumerable<GameObjectLookup.GameObjectInfo>
                 tf2parent[info.PathId] = tValueField["m_Father.m_PathID"].AsLong;
                 tf2go[info.PathId] = tValueField["m_GameObject.m_PathID"].AsLong;
             }
+
         }
+
+        //Log("Finished first pass");
 
         Dictionary<long, GameObjectInfo> fromTransformLookup = [];
 
@@ -115,6 +124,7 @@ public class GameObjectLookup : IEnumerable<GameObjectLookup.GameObjectInfo>
             DoAdd(pathId);
         }
 
+        //Log("Finished Second pass");
         return CreateFromInfos(fromTransformLookup.Values);
     }
 

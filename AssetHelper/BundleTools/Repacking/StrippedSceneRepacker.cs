@@ -3,8 +3,11 @@ using AssetsTools.NET.Extra;
 using Silksong.AssetHelper.Util;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using UnityEngine.TextCore.Text;
 using GameObjectInfo = Silksong.AssetHelper.BundleTools.GameObjectLookup.GameObjectInfo;
 
 namespace Silksong.AssetHelper.BundleTools.Repacking;
@@ -20,11 +23,18 @@ public class StrippedSceneRepacker : SceneRepacker
     /// <inheritdoc />
     public override void Repack(string sceneBundlePath, List<string> objectNames, string outBundlePath, ref RepackedBundleData outData)
     {
+
+        //AssetHelperPlugin.InstanceLogger.LogInfo($"");
+        Stopwatch sw = Stopwatch.StartNew();
+        void Log(string msg, [CallerLineNumber] int lineno = -1) => AssetHelperPlugin.InstanceLogger.LogInfo($"{msg} [@{lineno}] [{sw.ElapsedMilliseconds} ms] Allocated:[{GC.GetTotalMemory(false) /1000000}]");
+        //Log("Started");
+
         objectNames = objectNames.GetHighestNodes();
 
         AssetsManager mgr = BundleUtils.CreateDefaultManager();
 
         using MemoryStream ms = new(File.ReadAllBytes(sceneBundlePath));
+        //Log("Read file");
         BundleFileInstance sceneBun = mgr.LoadBundleFile(ms, sceneBundlePath);
         
         if (!mgr.TryFindAssetsFiles(sceneBun, out BundleUtils.SceneBundleInfo sceneBundleInfo))
@@ -81,6 +91,8 @@ public class StrippedSceneRepacker : SceneRepacker
             }
         }
         outData.NonRepackedAssets = missingObjects;
+        Log($"There are {includedContainerGos.Count} objects included");
+        Log($"There are {rootmostGos.Count} objects included");
 
         // Strip all assets that are not needed
         foreach (AssetFileInfo afileInfo in mainSceneAfileInst.file.AssetInfos.ToList())
@@ -90,6 +102,7 @@ public class StrippedSceneRepacker : SceneRepacker
                 mainSceneAfileInst.file.Metadata.RemoveAssetInfo(afileInfo);
             }
         }
+        //Log("Objects stripped");
 
         // Determine the new path ID for the asset at path=1
         long newOneAssetPathId = 1;
@@ -102,6 +115,8 @@ public class StrippedSceneRepacker : SceneRepacker
                 newOneAssetPathId--;
             }            
         }
+
+        //Log("Path id 1 found");
 
         long updatedPathId(long orig) => orig == 1 ? newOneAssetPathId : orig;
 
@@ -136,6 +151,8 @@ public class StrippedSceneRepacker : SceneRepacker
             transformField["m_Father.m_PathID"].AsLong = 0;
             afInfo.SetNewData(transformField);
         }
+
+        //Log("assets deparented");
 
         // Set up the internal bundle
         AssetFileInfo internalBundle = sceneSharedAssetsFileInst.file.GetAssetsOfType(AssetClassID.AssetBundle).First();
@@ -187,6 +204,9 @@ public class StrippedSceneRepacker : SceneRepacker
         iBundleData["m_Container.Array"].Children.AddRange(newChildren);
         outData.GameObjectAssets = containerPaths;
 
+        //Log("AssetBundle data set");
+
+
         // Move the asset at pathId = 1 to newOneAssetPathId
         if (newOneAssetPathId != 1)
         {
@@ -236,6 +256,8 @@ public class StrippedSceneRepacker : SceneRepacker
         }
 
         sceneBun.file.WriteBundleToFile(outBundlePath);
+
         mgr.UnloadAll();
+        
     }
 }
