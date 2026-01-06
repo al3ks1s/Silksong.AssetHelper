@@ -38,7 +38,7 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
         Instance = this;
         InstanceLogger = this.Logger;
         new Hook(typeof(Net35Polyfill).GetMethod(nameof(Net35Polyfill.CopyToCompat)), PatchC2C);
-        FilteredLogs.API.ApplyFilter(Name);
+        //FilteredLogs.API.ApplyFilter(Name);
         BundleDeps.Setup();
 
         GameEvents.Hook();

@@ -104,7 +104,7 @@ internal static class TestExecutor
         foreach ((string cab, string name) in BundleDeps.CabLookup)
         {
             string origPrimaryKey = AssetsData.ToBundleKey(name);
-            cab2key[cab] = nameof(AssetHelper) + origPrimaryKey;
+            cab2key[cab] = nameof(AssetHelper) + ":" + origPrimaryKey;
         }
 
         foreach (IResourceLocation locn in Addressables.ResourceLocators.First().AllLocations)
@@ -112,7 +112,7 @@ internal static class TestExecutor
             if (locn.ResourceType != typeof(IAssetBundleResource)) continue;
             if (locn.PrimaryKey.StartsWith("scenes_scenes_scenes")) continue;
 
-            bundleLocs.Add(CatalogEntryUtils.CreateEntryFromLocation(locn, nameof(AssetHelper) + locn.PrimaryKey));
+            bundleLocs.Add(CatalogEntryUtils.CreateEntryFromLocation(locn, nameof(AssetHelper) + ":" + locn.PrimaryKey));
 
             using (MemoryStream ms = new(File.ReadAllBytes(locn.InternalId)))
             {
@@ -124,7 +124,7 @@ internal static class TestExecutor
                     .Select(x => x.OriginalPathName.Split("/")[^1].ToLowerInvariant())
                     .Where(x => x.StartsWith("cab"))
                     .Select(x => cab2key[x])
-                    .Prepend(nameof(AssetHelper) + locn.PrimaryKey)
+                    .Prepend(nameof(AssetHelper) + ":" + locn.PrimaryKey)
                     .ToList();
 
                 foreach (AssetTypeValueField ctrEntry in iBundle["m_Container.Array"].Children)
@@ -155,20 +155,24 @@ internal static class TestExecutor
 
         AssetHelperPlugin.InstanceLogger.LogInfo($"starting lookup");
         //AssetBundle.UnloadAllAssetBundles(false);
-        var lookup = DebugTools.GenerateBundleNameLookup();
         //DebugTools.GetLoadedBundleNames(out List<string> names, out List<string> unknown);
-
-        AssetHelperPlugin.InstanceLogger.LogInfo($"{lookup["shopui_assets_all.bundle"]}");
-
+      
         AssetHelperPlugin.InstanceLogger.LogInfo($"Loaded: {AssetBundle.GetAllLoadedAssetBundles().Count()}");
+        
+        var locnn = lr.AllLocations.Where(f => f.PrimaryKey.Contains("AssetHelper/Addressables/Assets/Prefabs/"));
+        foreach (var loc in locnn)
+        {
+            
+            var handle = Addressables.LoadAssetAsync<GameObject>(loc);
+            handle.WaitForCompletion();
 
-        var locnn = lr.AllLocations.Where(f => f.PrimaryKey.Contains("Assets/Prefabs/UI/Fast Travel Map.prefab")).First();
-        var handle = Addressables.LoadAssetAsync<GameObject>(locnn);
-        handle.WaitForCompletion();
+            AssetHelperPlugin.InstanceLogger.LogInfo($"Loaded: {AssetBundle.GetAllLoadedAssetBundles().Count()}");
+            AssetHelperPlugin.InstanceLogger.LogInfo($"{handle.Status}");
+            AssetHelperPlugin.InstanceLogger.LogInfo($"{handle.OperationException}");
+            AssetHelperPlugin.InstanceLogger.LogInfo($"{handle.Result}");
 
-        AssetHelperPlugin.InstanceLogger.LogInfo($"Loaded: {AssetBundle.GetAllLoadedAssetBundles().Count()}");
-        AssetHelperPlugin.InstanceLogger.LogInfo($"{handle.Status}");
-        AssetHelperPlugin.InstanceLogger.LogInfo($"{handle.OperationException}");
+        }
+
     }
 
     public static void TestCatalogSerialization2()
