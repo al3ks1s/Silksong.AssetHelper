@@ -22,56 +22,51 @@ public static class AddressablesData
     private static readonly ManualLogSource Log = Logger.CreateLogSource($"{nameof(AssetHelper)}.{nameof(AddressablesData)}");
 
     /// <summary>
-    /// Lookup (lowercase bundle path relative to root bundles folder, with no .bundle suffix) -> (IResourceLocation in the default catalog)
+    /// Lookup (lowercase bundle path relative to root bundles folder, with no .bundle suffix) -> (bundle primary key)
     /// </summary>
-    private static Dictionary<string, IResourceLocation>? _bundleLocations;
+    private static Dictionary<string, string>? _bundleKeys;
 
     /// <summary>
-    /// Mapping from bundle file name to the <see cref="IResourceLocation"/> in the default Addressables catalog.
+    /// The main Addressables resource locator used by the game.
     /// </summary>
-    public static IReadOnlyDictionary<string, IResourceLocation>? BundleLocations
-    {
-        get
-        {
-            if (_bundleLocations is null)
-            {
-                return null;
-            }
-            return new ReadOnlyDictionary<string, IResourceLocation>(_bundleLocations);
-        }
-    }
-
-    /// <summary>
-    /// Get the <see cref="IResourceLocation"/> for a given scene name.
-    /// </summary>
-    public static bool TryGetLocationForScene(string sceneName, [NotNullWhen(true)] out IResourceLocation? location)
-    {
-        sceneName = sceneName.ToLowerInvariant();
-        string key = $"scenes_scenes_scenes/{sceneName}";
-        if (BundleLocations is null)
-        {
-            location = default;
-            return false;
-        }
-
-        if (!BundleLocations.TryGetValue(key, out location))
-        {
-            return false;
-        }
-        return true;
-    }
+    public static IResourceLocator? MainLocator { get; private set; }
 
     /// <summary>
     /// Mapping from bundle file name to the key Addressables uses to load it.
     /// 
     /// This may change when the game updates but does not otherwise.
     /// </summary>
-    public static Dictionary<string, string>? BundleKeys => BundleLocations?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.PrimaryKey);
+    public static IReadOnlyDictionary<string, string>? BundleKeys => _bundleKeys == null ? null : new ReadOnlyDictionary<string, string>(_bundleKeys);
+
+
+    /// <summary>
+    /// Get the <see cref="IResourceLocation"/> for a given bundle name.
+    /// </summary>
+    public static bool TryGetLocation(string bundleName, [NotNullWhen(true)] out IResourceLocation? location)
+    {
+        string key = ToBundleKey(bundleName);
+        IList<IResourceLocation> locations = Array.Empty<IResourceLocation>();
+        if (!MainLocator?.Locate(key, typeof(IAssetBundleResource), out locations) ?? false)
+        {
+            location = default;
+            return false;
+        }
+
+        location = locations.FirstOrDefault();
+        return location != null;
+    }
+
+    /// <summary>
+    /// Get the <see cref="IResourceLocation"/> for a given scene name.
+    /// </summary>
+    public static bool TryGetLocationForScene(string sceneName, [NotNullWhen(true)] out IResourceLocation? location)
+        => TryGetLocation($"scenes_scenes_scenes/{sceneName.ToLowerInvariant()}", out location);
+
             
     /// <summary>
     /// This is <see langword="true"/> if Addressables has loaded the catalog, <see langword="false"/> otherwise.
     /// </summary>
-    public static bool IsAddressablesLoaded => _bundleLocations != null;
+    public static bool IsAddressablesLoaded => _bundleKeys != null;
 
     private static DelayedAction _afterAddressablesLoaded = new();
 
@@ -104,40 +99,35 @@ public static class AddressablesData
 
     internal static bool TryLoadBundleKeys()
     {
-        Dictionary<string, IResourceLocation> locations = [];
+        Dictionary<string, string> bundleKeys = [];
 
         Stopwatch sw = Stopwatch.StartNew();
 
-        IResourceLocator? defaultLocator = Addressables.ResourceLocators.FirstOrDefault(x => x.AllLocations.Any());
+        MainLocator = Addressables.ResourceLocators.FirstOrDefault(x => x.Keys.Any());
 
-        if (defaultLocator == null)
+        if (MainLocator == null)
         {
             Log.LogWarning($"Addressables not loaded yet");
             return false;
         }
 
-        foreach (IResourceLocation location in defaultLocator.AllLocations)
+        foreach (string key in MainLocator.Keys.OfType<string>())
         {
-            if (location.ResourceType != typeof(IAssetBundleResource))
-            {
-                continue;
-            }
+            if (!TryStrip(key, out string? stripped)) continue;
 
-            if (!TryStrip(location.PrimaryKey, out string? stripped)) continue;
-
-            locations[stripped] = location;
+            bundleKeys[stripped] = key;
         }
 
         sw.Stop();
 
-        Log.LogInfo($"Loaded {locations.Count} bundle locations in {sw.ElapsedMilliseconds} ms");
+        Log.LogInfo($"Loaded {bundleKeys.Count} bundle locations in {sw.ElapsedMilliseconds} ms");
 
-        if (locations.Count == 0)
+        if (bundleKeys.Count == 0)
         {
             return false;
         }
 
-        _bundleLocations = locations;
+        _bundleKeys = bundleKeys;
 
         _afterAddressablesLoaded.Activate();
 
@@ -149,7 +139,7 @@ public static class AddressablesData
     /// </summary>
     public static string ToBundleKey(string name)
     {
-        if (_bundleLocations == null)
+        if (_bundleKeys == null)
         {
             Log.LogWarning($"{nameof(ToBundleKey)} called before addressables loaded");
             return name;
@@ -164,9 +154,9 @@ public static class AddressablesData
             name = name[..^7];
         }
 
-        if (_bundleLocations.TryGetValue(name, out IResourceLocation location))
+        if (_bundleKeys.TryGetValue(name, out string primaryKey))
         {
-            return location.PrimaryKey;
+            return primaryKey;
         }
 
         throw new Exception($"Bundle {name} not found in lookup.");

@@ -96,14 +96,10 @@ public static class DebugTools
 
     private static void DumpAllAddressableAssetsInternal()
     {
-        List<AddressablesAssetInfo> assetInfos = [];
-        
-        foreach (IResourceLocation loc in Addressables.ResourceLocators.SelectMany(loc => loc.AllLocations))
+        if (AddressablesData.MainLocator != null)
         {
-            assetInfos.Add(AddressablesAssetInfo.FromLocation(loc));
+            DumpAllAddressableAssets(AddressablesData.MainLocator, "addressables_main.json");
         }
-
-        assetInfos.SerializeToFileInBackground(Path.Combine(AssetPaths.DebugDataDir, "addressable_assets.json"));
     }
 
     /// <summary>
