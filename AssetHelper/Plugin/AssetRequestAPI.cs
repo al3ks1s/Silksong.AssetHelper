@@ -1,6 +1,7 @@
 ﻿using Silksong.AssetHelper.Internal;
 using System;
 using System.Collections.Generic;
+using UnityEngine.AddressableAssets.ResourceLocators;
 
 namespace Silksong.AssetHelper.Plugin;
 
@@ -14,6 +15,11 @@ public static class AssetRequestAPI
     internal static Dictionary<string, HashSet<string>> SceneAssetRequest { get; } = [];
 
     internal static DelayedAction AfterBundleCreationComplete = new();
+
+    /// <summary>
+    /// The <see cref="IResourceLocator"/> containing scene assets.
+    /// </summary>
+    public static IResourceLocator? SceneAssetLocator { get; internal set; }
 
     /// <summary>
     /// Invoke this action once AssetHelper has built the repacked scene bundles and loaded the new catalog.

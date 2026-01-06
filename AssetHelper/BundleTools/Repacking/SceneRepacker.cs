@@ -58,10 +58,11 @@ public abstract class SceneRepacker
         bundleName = $"{fullHash.Substring(32, 32)}.bundle";
     }
 
-    /// <inheritdoc cref="Repack(string, List{string}, string, ref RepackedBundleData)" />
+    /// <inheritdoc cref="Repack(string, List{string}, string, string, ref RepackedBundleData)" />
     public RepackedBundleData Repack(
         string sceneBundlePath,
         List<string> objectNames,
+        string containerPrefix,
         string outBundlePath
         )
     {
@@ -72,7 +73,7 @@ public abstract class SceneRepacker
         outData.CabName = cabName;
         outData.BundleName = bundleName;
 
-        Repack(sceneBundlePath, objectNames, outBundlePath, ref outData);
+        Repack(sceneBundlePath, objectNames, containerPrefix, outBundlePath, ref outData);
         return outData;
     }
 
@@ -83,12 +84,14 @@ public abstract class SceneRepacker
     /// <param name="objectNames">A list of game objects to include.
     /// Any game object in this list should have an ancestor which is accessible via <see cref="UnityEngine.AssetBundle.LoadAsset(string)"/>,
     /// provided the supplied game object exists in the bundle.</param>
+    /// <param name="containerPrefix">Prefix to use for asset paths in the container of this bundle.</param>
     /// <param name="outBundlePath">File location for the repacked bundle.</param>
     /// <param name="outData">The RepackedBundleData object describing the generated bundle. Some properties (such as cab/bundle name)
     /// will be read from this parameter; the repacking function will populate others.</param>
     public abstract void Repack(
         string sceneBundlePath,
         List<string> objectNames,
+        string containerPrefix,
         string outBundlePath,
         ref RepackedBundleData outData);
 }

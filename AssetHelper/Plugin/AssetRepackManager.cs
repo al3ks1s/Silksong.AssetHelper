@@ -62,8 +62,13 @@ internal static class AssetRepackManager
             yield return null;
         }
 
-        AsyncOperationHandle<IResourceLocator> catalogLoadOp = Addressables.LoadContentCatalogAsync(Path.Combine(AssetPaths.CatalogFolder, $"{SCENE_ASSET_CATALOG_KEY}.bin"));
-        yield return catalogLoadOp;
+        if (_repackData.Any())
+        {
+            // Only load the catalog if anyone's requested scene assets
+            AsyncOperationHandle<IResourceLocator> catalogLoadOp = Addressables.LoadContentCatalogAsync(Path.Combine(AssetPaths.CatalogFolder, $"{SCENE_ASSET_CATALOG_KEY}.bin"));
+            yield return catalogLoadOp;
+            AssetRequestAPI.SceneAssetLocator = catalogLoadOp.Result;
+        }
 
         AssetRequestAPI.AfterBundleCreationComplete.Activate();
 
@@ -177,6 +182,7 @@ internal static class AssetRepackManager
             RepackedBundleData repackData = repacker.Repack(
                 AssetPaths.GetScenePath(scene),
                 request.ToList(),
+                $"{nameof(AssetHelper)}/{scene}",
                 Path.Combine(AssetPaths.RepackedSceneBundleDir, $"repacked_{scene}.bundle")
                 );
 

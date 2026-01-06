@@ -35,7 +35,7 @@ public class ShallowSceneRepacker : SceneRepacker
 
 
     /// <inheritdoc />
-    public override void Repack(string sceneBundlePath, List<string> objectNames, string outBundlePath, ref RepackedBundleData outData)
+    public override void Repack(string sceneBundlePath, List<string> objectNames, string containerPrefix, string outBundlePath, ref RepackedBundleData outData)
     {
         // Only support root objects
         List<string> rootObjects = objectNames.Select(x => x.Split('/')[0]).Distinct().ToList();
@@ -167,7 +167,7 @@ public class ShallowSceneRepacker : SceneRepacker
 
             int count = preloadPtrs.Count - start;
 
-            string containerPath = $"{nameof(AssetHelper)}/{objName}.prefab";
+            string containerPath = $"{containerPrefix}/{objName}.prefab";
             containerPaths.Add(containerPath, objName);
 
             AssetTypeValueField newChild = ValueBuilder.DefaultValueFieldFromArrayTemplate(bundleData["m_Container.Array"]);

@@ -18,7 +18,7 @@ namespace Silksong.AssetHelper.BundleTools.Repacking;
 public class StrippedSceneRepacker : SceneRepacker
 {
     /// <inheritdoc />
-    public override void Repack(string sceneBundlePath, List<string> objectNames, string outBundlePath, ref RepackedBundleData outData)
+    public override void Repack(string sceneBundlePath, List<string> objectNames, string containerPrefix, string outBundlePath, ref RepackedBundleData outData)
     {
         objectNames = objectNames.GetHighestNodes();
 
@@ -169,7 +169,7 @@ public class StrippedSceneRepacker : SceneRepacker
 
             int count = preloadPtrs.Count - start;
 
-            string containerPath = $"{nameof(AssetHelper)}/{containerGo}.prefab";
+            string containerPath = $"{containerPrefix}/{containerGo}.prefab";
             containerPaths[containerPath] = containerGo;
 
             AssetTypeValueField newChild = ValueBuilder.DefaultValueFieldFromArrayTemplate(iBundleData["m_Container.Array"]);

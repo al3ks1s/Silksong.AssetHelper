@@ -52,7 +52,11 @@ internal static class TestExecutor
             try
             {
                 Stopwatch miniSw = Stopwatch.StartNew();
-                RepackedBundleData dat = r.Repack(AssetPaths.GetScenePath(scene), objs, Path.Combine(AssetPaths.AssemblyFolder, "ser_dump", $"repacked_{scene}.bundle"));
+                RepackedBundleData dat = r.Repack(
+                    AssetPaths.GetScenePath(scene),
+                    objs,
+                    $"{nameof(AssetHelper)}/{scene}",
+                    Path.Combine(AssetPaths.AssemblyFolder, "ser_dump", $"repacked_{scene}.bundle"));
                 data[scene] = dat;
                 miniSw.Stop();
                 AssetHelperPlugin.InstanceLogger.LogInfo($"Scene {scene} complete {miniSw.ElapsedMilliseconds} ms");

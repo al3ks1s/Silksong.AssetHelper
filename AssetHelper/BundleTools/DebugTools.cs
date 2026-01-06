@@ -87,6 +87,8 @@ public static class DebugTools
     /// <summary>
     /// Write a list of all Addressable assets loadable using <see cref="Addressables.LoadAssetAsync{TObject}(object)"/> directly.
     /// 
+    /// This only includes base game addressable assets; assets from catalogs added by AssetHelper are not included.
+    /// 
     /// The list includes the most important information about each asset.
     /// </summary>
     public static void DumpAllAddressableAssets() 
