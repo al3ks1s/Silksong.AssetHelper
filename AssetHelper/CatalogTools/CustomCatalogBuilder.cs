@@ -28,7 +28,7 @@ internal class CustomCatalogBuilder
     {
         _primaryKeyPrefix = primaryKeyPrefix;
         _baseBundleEntries = [];
-        foreach (IResourceLocation location in Addressables.ResourceLocators.First().AllLocations)
+        foreach (IResourceLocation location in AddressablesData.MainLocator!.AllLocations)
         {
             if (location.ResourceType != typeof(IAssetBundleResource))
             {
@@ -44,7 +44,7 @@ internal class CustomCatalogBuilder
                 continue;
             }
 
-            string primaryKey = $"{primaryKeyPrefix}_{bundleName}";
+            string primaryKey = $"{_primaryKeyPrefix}/DependencyBundles/{bundleName}";
             ContentCatalogDataEntry entry = CatalogEntryUtils.CreateEntryFromLocation(location, primaryKey);
 
             _baseBundleEntries.Add(bundleName, entry);
@@ -55,7 +55,7 @@ internal class CustomCatalogBuilder
     public void AddRepackedSceneData(string sceneName, RepackedBundleData data, string bundlePath)
     {
         // Create an entry for the bundle
-        string repackedSceneBundleKey = $"{_primaryKeyPrefix}/RepackedScenes/{sceneName}";
+        string repackedSceneBundleKey = $"{_primaryKeyPrefix}/SceneBundles/{sceneName}";
 
         ContentCatalogDataEntry bundleEntry = CatalogEntryUtils.CreateBundleEntry(
                 repackedSceneBundleKey,
@@ -80,7 +80,7 @@ internal class CustomCatalogBuilder
                 containerPath,
                 typeof(GameObject),
                 dependencyKeys,
-                $"{_primaryKeyPrefix}/RepackedAssets/{sceneName}/{objPath}"
+                $"{_primaryKeyPrefix}/Assets/{sceneName}/{objPath}"
                 );
             _addedEntries.Add(entry);
         }

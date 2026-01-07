@@ -65,7 +65,7 @@ internal static class AssetRepackManager
         if (_repackData.Any())
         {
             // Only load the catalog if anyone's requested scene assets
-            AsyncOperationHandle<IResourceLocator> catalogLoadOp = Addressables.LoadContentCatalogAsync(Path.Combine(AssetPaths.CatalogFolder, $"{SCENE_ASSET_CATALOG_KEY}.bin"));
+            AsyncOperationHandle<IResourceLocator> catalogLoadOp = Addressables.LoadContentCatalogAsync(Path.Combine(AssetPaths.CatalogFolder, $"{CatalogKeys.SceneCatalogId}.bin"));
             yield return catalogLoadOp;
             AssetRequestAPI.SceneAssetLocator = catalogLoadOp.Result;
         }
@@ -76,8 +76,6 @@ internal static class AssetRepackManager
         yield break;
     }
     #endregion
-
-    private const string SCENE_ASSET_CATALOG_KEY = "AssetHelper-RepackedSceneData";
 
     private static readonly Version _lastAcceptablePluginVersion = Version.Parse("0.1.0");
     private static string _repackDataPath = Path.Combine(AssetPaths.RepackedSceneBundleDir, "repack_data.json");
@@ -210,7 +208,7 @@ internal static class AssetRepackManager
     internal static IEnumerator CreateCatalog(RepackDataCollection data)
     {
         AssetHelperPlugin.InstanceLogger.LogInfo($"Creating catalog");
-        CustomCatalogBuilder cbr = new(SCENE_ASSET_CATALOG_KEY);
+        CustomCatalogBuilder cbr = new(CatalogKeys.SceneCatalogId);
         foreach ((string sceneName, RepackedSceneBundleData repackBunData) in data)
         {
             if (repackBunData.Data == null) continue;

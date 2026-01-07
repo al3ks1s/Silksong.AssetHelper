@@ -70,9 +70,9 @@ internal static class CatalogUtils
         
         Hash128 outhash = Hash(catalogBytes);
 
-        string catalogBinPath = Path.Combine(AssetPaths.CatalogFolder, $"{catalogName}.bin");
+        string catalogBinPath = Path.Combine(AssetPaths.CatalogFolder, $"{catalogId}.bin");
         File.WriteAllBytes(catalogBinPath, catalogBytes);
-        File.WriteAllText(Path.Combine(AssetPaths.CatalogFolder, $"{catalogName}.hash"), outhash.ToString());
+        File.WriteAllText(Path.Combine(AssetPaths.CatalogFolder, $"{catalogId}.hash"), outhash.ToString());
 
         return catalogBinPath;
     }
