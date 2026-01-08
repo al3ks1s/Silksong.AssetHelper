@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Silksong.AssetHelper.Internal;
+using System;
 using System.Collections.Generic;
 
 namespace Silksong.AssetHelper.Plugin;
@@ -20,5 +22,6 @@ internal class SceneCatalogMetadata : CatalogMetadata
 
 internal class NonSceneCatalogMetadata : CatalogMetadata
 {
-    public List<(string bundleName, string assetName, Type assetType)> CatalogAssets { get; set; } = [];
+    [JsonConverter(typeof(DictListConverter<(string, string), Type>))]
+    public Dictionary<(string bundleName, string assetName), Type> CatalogAssets { get; set; } = [];
 }

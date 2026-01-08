@@ -282,7 +282,7 @@ internal static class AssetRepackManager
             && oldPluginVersion <= Version.Parse(AssetHelperPlugin.Version)
             && oldPluginVersion >= _lastAcceptablePluginVersion)
         {
-            toCatalog = existingCatalogData.CatalogAssets.ToDictionary(trio => (trio.bundleName, trio.assetName), trio => trio.assetType);
+            toCatalog = existingCatalogData.CatalogAssets;
         }
 
         foreach ((var assetKey, Type value) in AssetRequestAPI.RequestedNonSceneAssets)
@@ -319,7 +319,7 @@ internal static class AssetRepackManager
         foreach (((string bundleName, string assetName), Type assetType) in AssetRequestAPI.RequestedNonSceneAssets)
         {
             cbr.AddAssets(bundleName, [(assetName, assetType)]);
-            metadata.CatalogAssets.Add((bundleName, assetName, assetType));
+            metadata.CatalogAssets.Add((bundleName, assetName), assetType);
         }
 
         yield return null;
