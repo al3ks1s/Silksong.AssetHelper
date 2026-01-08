@@ -1,6 +1,7 @@
 ﻿using Silksong.AssetHelper.Internal;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.AddressableAssets.ResourceLocators;
 
 namespace Silksong.AssetHelper.Plugin;
@@ -83,9 +84,9 @@ public static class AssetRequestAPI
 
     internal static bool FullNonSceneCatalogRequested { get; private set; }
 
-    internal record NonSceneAssetInfo(string bundleName, string assetName, Type assetType);
+    internal static Dictionary<(string bundleName, string assetName), Type> RequestedNonSceneAssets { get; } = [];
 
-    internal static List<NonSceneAssetInfo> RequestedNonSceneAssets { get; } = [];
+    internal static bool AnyNonSceneCatalogRequested => FullNonSceneCatalogRequested || RequestedNonSceneAssets.Count > 0;
 
     /// <summary>
     /// Request the full catalog of non-scene assets to be created.
@@ -102,8 +103,25 @@ public static class AssetRequestAPI
     /// <param name="bundleName">The name of the bundle containing the asset.
     /// This is the path to the bundle, relative to the Standalone??? dir.</param>
     /// <param name="assetName">The name of the asset within the bundle container.</param>
-    public static void RequestNonSceneAsset<T>(string bundleName, string assetName) where T : UObject 
-        => RequestedNonSceneAssets.Add(new(bundleName, assetName, typeof(T)));
+    public static void RequestNonSceneAsset<T>(string bundleName, string assetName) where T : UObject
+    {
+        bundleName = bundleName.ToLowerInvariant();
+        if (bundleName.EndsWith(".bundle"))
+        {
+            bundleName = bundleName[..^7];
+        }
+
+        if (RequestedNonSceneAssets.TryGetValue((bundleName, assetName), out Type t))
+        {
+            if (t != typeof(T))
+            {
+                AssetHelperPlugin.InstanceLogger.LogError($"Asset {bundleName} - {assetName} requested with both {t.Name} and {typeof(T).Name}");
+            }
+        }
+
+        // Always prefer the newer type, regardless of the error
+        RequestedNonSceneAssets[(bundleName, assetName)] = typeof(T);
+    }
 
     /// <summary>
     /// Request that the given assets of the same type within the same bundle are made available via Addressables.
