@@ -55,7 +55,8 @@ internal static class AssetRepackManager
             }
         }
 
-        IEnumerator catalogCreate = CreateSceneAssetCatalog(_repackData);
+        // If no repacking was done, don't 
+        IEnumerator catalogCreate = CreateSceneAssetCatalog(_repackData, shouldRepack);
         while (catalogCreate.MoveNext())
         {
             yield return null;
@@ -237,10 +238,23 @@ internal static class AssetRepackManager
         }
     }
 
-    internal static IEnumerator CreateSceneAssetCatalog(RepackDataCollection data)
+    internal static IEnumerator CreateSceneAssetCatalog(RepackDataCollection data, bool didRepack)
     {
-        // TODO - check metadata, this should include all game objects
+        // TODO - check game objects in metadata
+        // for now we can just check if there's a metadata change
         string catalogMetadataPath = Path.ChangeExtension(SceneCatalogPath, ".json");
+
+        if (!didRepack
+            && JsonExtensions.TryLoadFromFile(catalogMetadataPath, out SceneCatalogMetadata? oldMeta)
+            && oldMeta.SilksongVersion == AssetPaths.SilksongVersion
+            && Version.TryParse(oldMeta.PluginVersion, out Version oldVersion)
+            && oldVersion <= Version.Parse(AssetHelperPlugin.Version)
+            && oldVersion >= _lastAcceptablePluginVersion
+            )
+        {
+            // We can skip only if there's no change in the repacked bundles and no change to the version metadata
+            yield break;
+        }
 
         AssetHelperPlugin.InstanceLogger.LogInfo($"Creating catalog");
         CustomCatalogBuilder cbr = new(CatalogKeys.SceneCatalogId);

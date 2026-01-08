@@ -10,8 +10,8 @@ class can be used to request assets.
 
 ## Prepare assets you want to load
 
-Use the @"Silksong.AssetHelper.Managed.AddressableAsset`1.FromSceneAsset(string, string)"
-and @"Silksong.AssetHelper.Managed.AddressableAsset`1.FromNonSceneAsset(string)"
+Use the @"Silksong.AssetHelper.Managed.AddressableAsset`1.FromSceneAsset(System.String,System.String)"
+and @"Silksong.AssetHelper.Managed.AddressableAsset`1.FromNonSceneAsset(System.String)"
 functions to create wrappers around any assets you want to access. These
 will have to be assets you have already requested.
 
@@ -25,4 +25,4 @@ a callback to @"Silksong.AssetHelper.Plugin.AssetRequestAPI.InvokeAfterBundleCre
 
 The assets can be instantiated at any time from the AddressableAsset instance,
 for example by using
-@"Silksong.AssetHelper.Managed.AddressableAssetExtensions.InstantiateAsset`1".
+@"Silksong.AssetHelper.Managed.AddressableAssetExtensions.InstantiateAsset``1(Silksong.AssetHelper.Managed.AddressableAsset{``0})".
