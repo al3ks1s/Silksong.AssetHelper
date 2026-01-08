@@ -91,7 +91,7 @@ public static class DebugTools
     /// 
     /// The list includes the most important information about each asset.
     /// </summary>
-    public static void DumpAllAddressableAssets() 
+    public static void DumpAllAddressableAssets()
     {
         AddressablesData.InvokeAfterAddressablesLoaded(DumpAllAddressableAssetsInternal);
     }
@@ -109,16 +109,27 @@ public static class DebugTools
     /// </summary>
     /// <param name="locator"></param>
     /// <param name="fileName">The name of the file within the debug data dir.</param>
-    public static void DumpAllAddressableAssets(IResourceLocator locator, string fileName)
+    /// <param name="includeDependencyNames">Whether to include the names of dependencies.
+    /// The dependency names will be in the form `[primaryKey | internalId]`.
+    /// This will significantly increase the size of the outputted file.</param>
+    public static void DumpAllAddressableAssets(IResourceLocator locator, string fileName, bool includeDependencyNames = false)
     {
         List<AddressablesAssetInfo> assetInfos = [];
 
         foreach (IResourceLocation loc in locator.AllLocations)
         {
-            assetInfos.Add(AddressablesAssetInfo.FromLocation(loc));
+            assetInfos.Add(AddressablesAssetInfo.FromLocation(loc, includeDependencyNames));
         }
 
-        assetInfos.SerializeToFileInBackground(Path.Combine(AssetPaths.DebugDataDir, fileName));
+        LocatorInfo locatorInfo = new() { LocatorID = locator.LocatorId, Infos = assetInfos };
+
+        locatorInfo.SerializeToFileInBackground(Path.Combine(AssetPaths.DebugDataDir, fileName));
+    }
+
+    private class LocatorInfo
+    {
+        public string? LocatorID { get; init; }
+        public List<AddressablesAssetInfo>? Infos { get; init; }
     }
 
     private class AddressablesAssetInfo
@@ -126,16 +137,22 @@ public static class DebugTools
         public string? InternalId { get; init; }
         public string? ProviderId { get; init; }
         public int DependencyCount { get; init; }
+        public List<string>? Dependencies { get; init; }
         public string? PrimaryKey { get; init; }
         public Type? ResourceType { get; init; }
 
-        public static AddressablesAssetInfo FromLocation(IResourceLocation loc)
+        public static AddressablesAssetInfo FromLocation(IResourceLocation loc, bool includeDependencyNames)
         {
+            List<string>? depNames = includeDependencyNames
+                ? loc.Dependencies?.Select(x => $"[{x?.PrimaryKey} | {x?.InternalId}]").ToList() ?? []
+                : null;
+
             return new()
             {
                 InternalId = loc.InternalId,
                 ProviderId = loc.ProviderId,
                 DependencyCount = loc.Dependencies?.Count ?? 0,
+                Dependencies = depNames,
                 PrimaryKey = loc.PrimaryKey,
                 ResourceType = loc.ResourceType,
             };
