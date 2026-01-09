@@ -69,7 +69,6 @@ public static class BundleDeps
 
         AssetsFileInstance afileInst = mgr.LoadAssetsFileFromBundle(bun, 0, false);
         AssetsFile afile = afileInst.file;
-        AssetFileInfo assetInfos = afile.GetAssetsOfType(AssetClassID.AssetBundle)[0];
 
         List<string> computedDeps = [];
         foreach (AssetsFileExternal x in afile.Metadata.Externals)

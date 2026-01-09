@@ -22,7 +22,6 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
     /// </summary>
     public static event Action? OnQuitApplication;
 
-
     internal static ManualLogSource InstanceLogger { get; private set; }
 
     private void Awake()
