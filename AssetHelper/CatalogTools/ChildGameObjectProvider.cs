@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
@@ -28,6 +29,10 @@ internal class ChildGameObjectProvider : ResourceProviderBase
                 
         List<object> deps = [];
         provideHandle.GetDependencies(deps);
+
+        AssetHelperPlugin.InstanceLogger.LogInfo($"{provideHandle.Location.Dependencies.First().InternalId}");
+        AssetHelperPlugin.InstanceLogger.LogInfo($"{provideHandle.Location.PrimaryKey}");
+        AssetHelperPlugin.InstanceLogger.LogInfo($"{provideHandle.Location.InternalId}");
 
         foreach (var thing in deps)
         {

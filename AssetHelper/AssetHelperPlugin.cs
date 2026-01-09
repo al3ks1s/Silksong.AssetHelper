@@ -16,6 +16,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.ResourceLocations;
+using UnityEngine.ResourceManagement.ResourceProviders;
 
 namespace Silksong.AssetHelper;
 
@@ -53,7 +54,7 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
 
         Logger.LogInfo($"Plugin {Name} ({Id}) has loaded!");
 
-        //AssetsData.InvokeAfterAddressablesLoaded(TestExecutor.CustomBundle);
+        AssetsData.InvokeAfterAddressablesLoaded(TestExecutor.CustomBundle);
 
         //LoadThingy2();
     }
@@ -95,7 +96,7 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
         }
         if (Input.GetKeyDown(KeyCode.K))
         {
-            TestExecutor.TestCatalogSerialization();
+            TestExecutor.CustomBundle();
         }
         if (Input.GetKeyDown(KeyCode.Y))
         {
@@ -112,6 +113,26 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
         AssetsData.InvokeAfterAddressablesLoaded(() =>
         {
             
+            var p = Addressables.LoadContentCatalogAsync(Path.Combine(AssetPaths.CatalogFolder, "AssetHelper-testCatalog.bin"));
+            var w = p.WaitForCompletion();
+            DebugTools.DumpAllAddressableAssets(w, "test2.json", true);
+
+            Logger.LogInfo($"");
+            var op = Addressables.LoadAssetAsync<GameObject>("AssetHelper/Addressables/Assets/Prefabs/Hornet Enemies/Song Pilgrim 03.prefab");
+            op.WaitForCompletion();
+
+            Logger.LogMessage($"Result: {op.Status}");
+            Logger.LogMessage($"StackT: {op.OperationException}");
+            Logger.LogMessage($"Object: {op.Result}");
+            GameObject.Instantiate(op.Result);
+        });
+    }
+
+    void LoadThingy3()
+    {
+        AssetsData.InvokeAfterAddressablesLoaded(() =>
+        {
+
             var p = Addressables.LoadContentCatalogAsync(Path.Combine(AssetPaths.CatalogFolder, "AssetHelper-repackedSceneCatalog.bin"));
             var w = p.WaitForCompletion();
             DebugTools.DumpAllAddressableAssets(w, "test2.json", true);
@@ -132,7 +153,8 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
 
         });
     }
-        IEnumerator LoadThingy()
+
+    IEnumerator LoadThingy()
     {
         string pkey = "AssetHelper/RepackedAssets/memory_coral_tower/Battle Scenes[Battle Scene Chamber 2/Wave 1/Coral Hunter]";
         var locn = Addressables.ResourceLocators.Skip(2).First().AllLocations.Last();

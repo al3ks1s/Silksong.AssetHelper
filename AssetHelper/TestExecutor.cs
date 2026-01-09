@@ -19,6 +19,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
+using UnityEngine.U2D;
 using RepackDataCollection = System.Collections.Generic.Dictionary<string, Silksong.AssetHelper.BundleTools.RepackedBundleData>;
 
 namespace Silksong.AssetHelper;
@@ -29,6 +30,7 @@ namespace Silksong.AssetHelper;
 /// </summary>
 internal static class TestExecutor
 {
+    internal static Dictionary<string, Type> typelookup = new Dictionary<string, Type>();
     public static int Completed { get;private set; }
 
     public static void TestCatalogSerialization()
@@ -179,9 +181,23 @@ internal static class TestExecutor
     {
         // Create a new catalog with all non-scene bundles and all container assets within those bundles
 
+
+        List<(MemoryStream, IResourceLocation)> bundlesms = new();
+
+        //Log($"Blabla"); lastMem = GC.GetTotalMemory(true);
+        foreach (IResourceLocation locn in Addressables.ResourceLocators.First().AllLocations)
+        {
+            if (locn.ResourceType != typeof(IAssetBundleResource)) continue;
+            if (locn.PrimaryKey.StartsWith("scenes_scenes_scenes")) continue;
+
+            //Log($"Bundle: {locn.PrimaryKey}"); lastMem = GC.GetTotalMemory(true);
+            bundlesms.Add((new(File.ReadAllBytes(locn.InternalId)), locn));
+        }
+
+        while (true) { 
         Stopwatch gatherSw = Stopwatch.StartNew();
         long lastMem = 0;
-        void Log(string msg, [CallerLineNumber] int lineno = -1) => AssetHelperPlugin.InstanceLogger.LogInfo($"{msg} [@{lineno}] [{gatherSw.ElapsedMilliseconds} ms] GC:{GC.GetTotalMemory(true) - lastMem}");
+        void Log(string msg, [CallerLineNumber] int lineno = -1) => AssetHelperPlugin.InstanceLogger.LogInfo($"{msg} [@{lineno}] [{gatherSw.ElapsedMilliseconds} ms] \tGC:{GC.GetTotalMemory(true) - lastMem}");
         AssetsManager mgr = new();
 
         List<ContentCatalogDataEntry> bundleLocs = new();
@@ -194,23 +210,15 @@ internal static class TestExecutor
             cab2key[cab] = nameof(AssetHelper) + ":" + origPrimaryKey;
         }
 
-        //Log($"Blabla"); lastMem = GC.GetTotalMemory(true);
-        foreach (IResourceLocation locn in Addressables.ResourceLocators.First().AllLocations)
-        {
-            if (locn.ResourceType != typeof(IAssetBundleResource)) continue;
-            if (locn.PrimaryKey.StartsWith("scenes_scenes_scenes")) continue;
-
-            //Log($"Bundle: {locn.PrimaryKey}"); lastMem = GC.GetTotalMemory(true);
-            bundleLocs.Add(CatalogEntryUtils.CreateEntryFromLocation(locn, out _));
-
-            using (MemoryStream ms = new(File.ReadAllBytes(locn.InternalId)))
-            {
+        foreach ((MemoryStream mss, IResourceLocation locn) in bundlesms) {
+                MemoryStream ms = new MemoryStream(mss.ToArray());
+                bundleLocs.Add(CatalogEntryUtils.CreateEntryFromLocation(locn, out _));
                 BundleFileInstance bun = mgr.LoadBundleFile(ms, locn.PrimaryKey);
-                //Log($"Bundle loaded"); lastMem = GC.GetTotalMemory(true);
+                Log($"Bundle loaded"); lastMem = GC.GetTotalMemory(true);
                 AssetsFileInstance afi = mgr.LoadAssetsFileFromBundle(bun, 0);
-                //Log($"FileInstance"); lastMem = GC.GetTotalMemory(true);
+                Log($"FileInstance"); lastMem = GC.GetTotalMemory(true);
                 AssetTypeValueField iBundle = mgr.GetBaseField(afi, 1);
-                //Log($"Bundle base field"); lastMem = GC.GetTotalMemory(true);
+                Log($"Bundle base field"); lastMem = GC.GetTotalMemory(true);
 
                 List<string> deps = afi.file.Metadata.Externals
                     .Select(x => x.OriginalPathName.Split("/")[^1].ToLowerInvariant())
@@ -228,12 +236,12 @@ internal static class TestExecutor
                     {
                         AssetHelperPlugin.InstanceLogger.LogMessage(name);
                     }
-                    assetLocs.Add(CatalogEntryUtils.CreateAssetEntry($"{name}", typeof(UObject), deps, out _));
+                    assetLocs.Add(CatalogEntryUtils.CreateAssetEntry($"{name}", typeof(GameObject), deps, out _));
                 }
-
+                
                 //Log($"Catalog entry"); lastMem = GC.GetTotalMemory(true);
                 mgr.UnloadAll();
-            }
+                
         }
         gatherSw.Stop();
         //AssetHelperPlugin.InstanceLogger.LogInfo($"Gathered catalog entries in {gatherSw.ElapsedMilliseconds} ms");
@@ -246,19 +254,21 @@ internal static class TestExecutor
 
         writeSw.Stop();
         AssetHelperPlugin.InstanceLogger.LogInfo($"Wrote catalog in {writeSw.ElapsedMilliseconds} ms");
+        /*
         AssetBundle.UnloadAllAssetBundles(false);
         var p = Addressables.LoadContentCatalogAsync(Path.Combine(AssetPaths.CatalogFolder, "AssetHelper-testCatalog.bin"));
         var locr = p.WaitForCompletion();
 
-        DebugTools.DumpAllAddressableAssets(locr, "nonscene.txt", true);
-
-        var locnn = locr.AllLocations.Where(f => f.PrimaryKey.Contains("Assets/Prefabs/UI/Fast Travel Map.prefab")).First();
+        DebugTools.DumpAllAddressableAssets(locr, "nonscene.json", true);
+        
+        var locnn = locr.AllLocations.Where(f => f.PrimaryKey.Contains("Assets/Prefabs/Hornet Enemies/Song Pilgrim 03.prefab")).First();
         var handle = Addressables.LoadAssetAsync<GameObject>(locnn);
         handle.WaitForCompletion();
-
+        
         AssetHelperPlugin.InstanceLogger.LogInfo($"{handle.Status}");
         AssetHelperPlugin.InstanceLogger.LogInfo($"{handle.OperationException}");
-
+        */
+    }
     }
 
     internal static string CreateCatalog(RepackDataCollection data)
@@ -393,7 +403,7 @@ internal static class TestExecutor
             "AssetHelper/RepackedAssets/memory_coral_tower/Battle Scenes",
             "Battle Scene Chamber 2/Wave 1/Coral Hunter",
             out _
-            ));
+        ));
 
         Log($"Placed {allEntries.Count} entries in catalog list");
 
@@ -402,6 +412,29 @@ internal static class TestExecutor
         Log("Wrote catalog");
 
         return catalogPath;
+    }
+
+    private static void initTypeDict()
+    {
+        typelookup["AnimatorController"] = typeof(RuntimeAnimatorController);
+        typelookup["AnimationClip"] = typeof(AnimationClip);
+        typelookup["AudioClip"] = typeof(AudioClip);
+        typelookup["AnimatorOverrideController"] = typeof(AnimatorOverrideController);
+        typelookup["MonoBehaviour"] = typeof(MonoBehaviour);
+        typelookup["SpriteAtlas"] = typeof(SpriteAtlas);
+        typelookup["AudioMixerController"] = typeof(string);
+        typelookup["AudioMixerGroupController"] = typeof(string);
+        typelookup["AudioMixerSnapshotController"] = typeof(string);
+        typelookup["GameObject"] = typeof(GameObject);
+        typelookup["Material"] = typeof(Material);
+        typelookup["Texture2D"] = typeof(Texture2D);
+        typelookup["Sprite"] = typeof(Sprite);
+        typelookup["Font"] = typeof(Font);
+        typelookup["Mesh"] = typeof(Mesh);
+        typelookup["PhysicsMaterial2D"] = typeof(PhysicsMaterial2D);
+        typelookup["LightingSettings"] = typeof(LightingSettings);
+        typelookup["Shader"] = typeof(Shader);
+        typelookup["TextAsset"] = typeof(UnityEngine.TextAsset);
     }
 
 
@@ -448,6 +481,8 @@ internal static class TestExecutor
         AssetHelperPlugin.InstanceLogger.LogInfo($"All scenes complete {sw.ElapsedMilliseconds} ms");
         AssetHelperPlugin.InstanceLogger.LogInfo($"Starting architect catalog");
 
+        //CreateCatalog2(data);
+
         ccb.Build();
 
     }
@@ -467,6 +502,7 @@ internal static class TestExecutor
         lookup["memory_coral_tower"] = data;
 
         CustomCatalogBuilder ccb = new CustomCatalogBuilder("repackedSceneCatalog");
+        AssetHelperPlugin.InstanceLogger.LogMessage($"{data.GameObjectAssets.First()}");
         ccb.AddRepackedSceneData("memory_coral_tower", data, Path.Combine(AssetPaths.AssemblyFolder, "battlescenes.bundle"));
         
         ccb.addEntry(CatalogEntryUtils.CreateChildGameObjectEntry(

@@ -108,7 +108,7 @@ internal static class CatalogEntryUtils
 
         return new ContentCatalogDataEntry(
             typeof(GameObject),
-            relativePath,
+            primaryKey,
             ChildGameObjectProvider.ClassProviderId,
             new object[] { primaryKey },
             deps,
