@@ -42,21 +42,16 @@ internal static class AssetRepackManager
         // This should already be the case, but we should check just in case it matters.
         yield return new WaitUntil(() => AddressablesData.IsAddressablesLoaded);
 
-        bool shouldRepack = Prepare();
+        IEnumerator repack = PrepareAndRun();
 
-        if (shouldRepack)
+        while (repack.MoveNext())
         {
-            IEnumerator runner = Run();
-
-            while (runner.MoveNext())
-            {
-                // Yield after each repack op is done
-                yield return null;
-            }
+            // Yield after each repack op is done
+            yield return null;
         }
 
         // If no repacking was done, don't 
-        IEnumerator catalogCreate = CreateSceneAssetCatalog(_repackData, shouldRepack);
+        IEnumerator catalogCreate = CreateSceneAssetCatalog(_repackData);
         while (catalogCreate.MoveNext())
         {
             yield return null;
@@ -113,11 +108,28 @@ internal static class AssetRepackManager
     // Data about the repacked assets in the bundles on disk
     private static RepackDataCollection _repackData = [];
 
+    private static bool _didRepack = false;
+
+    internal static IEnumerator PrepareAndRun()
+    {
+        Prepare();
+
+        if (_toRepack.Count > 0)
+        {
+            _didRepack = true;
+            return Run();
+        }
+        else
+        {
+            return Enumerable.Empty<object>().GetEnumerator();
+        }
+    }
+
     /// <summary>
     /// Prepare the repacking request.
     /// </summary>
     /// <returns>True if there is any repacking to be done.</returns>
-    internal static bool Prepare()
+    internal static void Prepare()
     {
         if (JsonExtensions.TryLoadFromFile(_repackDataPath, out RepackDataCollection? repackData))
         {
@@ -162,8 +174,6 @@ internal static class AssetRepackManager
                 // .Union(existingBundleData.Data.NonRepackedAssets ?? Enumerable.Empty<string>())
                 );
         }
-
-        return _toRepack.Count > 0;
     }
 
     /// <summary>
@@ -239,13 +249,13 @@ internal static class AssetRepackManager
         }
     }
 
-    internal static IEnumerator CreateSceneAssetCatalog(RepackDataCollection data, bool didRepack)
+    internal static IEnumerator CreateSceneAssetCatalog(RepackDataCollection data)
     {
         // TODO - check game objects in metadata
         // for now we can just check if there's a metadata change
         string catalogMetadataPath = Path.ChangeExtension(SceneCatalogPath, ".json");
 
-        if (!didRepack
+        if (!_didRepack
             && JsonExtensions.TryLoadFromFile(catalogMetadataPath, out SceneCatalogMetadata? oldMeta)
             && oldMeta.SilksongVersion == AssetPaths.SilksongVersion
             && Version.TryParse(oldMeta.PluginVersion, out Version oldVersion)
