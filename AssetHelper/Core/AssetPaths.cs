@@ -1,6 +1,5 @@
 ﻿using BepInEx;
 using System.IO;
-using System.Reflection;
 using UnityEngine;
 
 namespace Silksong.AssetHelper.Core;
@@ -15,8 +14,6 @@ public static class AssetPaths
         Directory.CreateDirectory(path);
         return path;
     }
-
-    private static string? _silksongVersion;
 
     /// <summary>
     /// The base game folder containing asset bundles.
@@ -41,24 +38,6 @@ public static class AssetPaths
     /// Get the path to the base game scene bundle for a given scene.
     /// </summary>
     public static string GetScenePath(string sceneName) => Path.Combine(BundleFolder, "scenes_scenes_scenes", $"{sceneName.ToLowerInvariant()}.bundle");
-
-    /// <summary>
-    /// The Silksong version. This is calculated using reflection so it is not hardcoded.
-    /// </summary>
-    public static string SilksongVersion
-    {
-        get
-        {
-            _silksongVersion ??= GetSilksongVersion();
-            return _silksongVersion;
-        }
-    }
-
-    private static string GetSilksongVersion() => typeof(Constants)
-        .GetField(nameof(Constants.GAME_VERSION), BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)
-        ?.GetRawConstantValue()
-        as string
-        ?? "UNKNOWN";
 
     private static string CacheSubfolder
     {

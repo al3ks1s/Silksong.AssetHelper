@@ -53,7 +53,7 @@ internal class NonSceneCatalog
         bool shouldWriteCatalog = false;
 
         if (JsonExtensions.TryLoadFromFile(catalogMetadataPath, out NonSceneCatalogMetadata? existingCatalogData)
-            && existingCatalogData.SilksongVersion == AssetPaths.SilksongVersion
+            && existingCatalogData.SilksongVersion == VersionData.SilksongVersion
             && Version.TryParse(existingCatalogData.PluginVersion ?? string.Empty, out Version oldPluginVersion)
             && oldPluginVersion <= Version.Parse(AssetHelperPlugin.Version)
             && oldPluginVersion >= _lastAcceptablePluginVersion)

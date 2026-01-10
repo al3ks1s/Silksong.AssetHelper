@@ -8,7 +8,7 @@ namespace Silksong.AssetHelper.Plugin;
 
 internal class CatalogMetadata
 {
-    public string SilksongVersion { get; set; } = AssetPaths.SilksongVersion;
+    public string SilksongVersion { get; set; } = VersionData.SilksongVersion;
 
     public string PluginVersion { get; set; } = AssetHelperPlugin.Version;
 }

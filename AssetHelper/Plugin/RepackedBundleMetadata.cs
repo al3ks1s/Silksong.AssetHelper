@@ -11,7 +11,7 @@ public sealed class RepackedSceneBundleData
     /// <summary>
     /// The Silksong version used to create the bundle.
     /// </summary>
-    public string SilksongVersion { get; init; } = AssetPaths.SilksongVersion;
+    public string SilksongVersion { get; init; } = VersionData.SilksongVersion;
 
     /// <summary>
     /// The Asset Helper version used to create the bundle.

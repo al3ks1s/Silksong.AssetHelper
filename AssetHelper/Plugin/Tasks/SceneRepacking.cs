@@ -152,7 +152,7 @@ internal class SceneRepacking
             return true;
         }
 
-        if (existingData.SilksongVersion == AssetPaths.SilksongVersion)
+        if (existingData.SilksongVersion == VersionData.SilksongVersion)
         {
             // If the Silksong version matches, then we're definitely fine.
             return false;
@@ -219,7 +219,7 @@ internal class SceneRepacking
 
         if (!_didRepack
             && JsonExtensions.TryLoadFromFile(catalogMetadataPath, out SceneCatalogMetadata? oldMeta)
-            && oldMeta.SilksongVersion == AssetPaths.SilksongVersion
+            && oldMeta.SilksongVersion == VersionData.SilksongVersion
             && Version.TryParse(oldMeta.PluginVersion, out Version oldVersion)
             && oldVersion <= Version.Parse(AssetHelperPlugin.Version)
             && oldVersion >= _lastAcceptablePluginVersion

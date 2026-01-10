@@ -31,7 +31,7 @@ internal class CachedObject<T> where T : class
             return false;
         }
         
-        if (AssetPaths.SilksongVersion != SilksongVersion)
+        if (VersionData.SilksongVersion != SilksongVersion)
         {
             return false;
         }
@@ -71,7 +71,7 @@ internal class CachedObject<T> where T : class
 
         CachedObject<T> created = new()
         {
-            SilksongVersion = AssetPaths.SilksongVersion,
+            SilksongVersion = VersionData.SilksongVersion,
             PluginVersion = AssetHelperPlugin.Version,
             Value = createDefault()
         };
