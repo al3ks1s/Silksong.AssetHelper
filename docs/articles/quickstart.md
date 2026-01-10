@@ -5,7 +5,7 @@ The easiest way to use AssetHelper to load assets is as follows.
 ## Request assets during your plugin's Awake method
 
 Use the @"Silksong.AssetHelper.ManagedAssets.AddressableAsset`1.FromSceneAsset(System.String,System.String)"
-and @"Silksong.AssetHelper.ManagedAssets.AddressableAsset`1.FromNonSceneAsset(System.String)"
+and @"Silksong.AssetHelper.ManagedAssets.AddressableAsset`1.FromNonSceneAsset(System.String,System.String)"
 functions during your plugin's Awake method to create wrappers around any assets you want to access.
 These will automatically be requested via the @"Silksong.AssetHelper.Plugin.AssetRequestAPI"
 API
