@@ -19,6 +19,33 @@ you will need to:
   - Remove certain components from the game object. Common components to remove include:
     - PersistentBoolItem (which the base game uses to disable the game object if it has already been "activated"
 	- TestGameObjectActivator, DeactivateIfPlayerdataTrue, DeactivateIfPlayerdataFalse
+	
+* Don't yield multiple asset loads sequentially
+
+It is a more efficient to start of each load at once, and only yield once. As an example:
+
+```cs
+AddressableAsset<GameObject> object1 = ...;
+AddressableAsset<GameObject> object2 = ...;
+AddressableAsset<GameObject> object3 = ...;
+
+// Bad
+IEnumerator LoadAll()
+{
+    yield return object1.Load();
+    yield return object2.Load();
+    yield return object3.Load();
+}
+
+// Better
+IEnumerator LoadAll()
+{
+    object1.Load();
+    object2.Load();
+    object3.Load();
+    yield return new WaitUntil(() => object1.IsLoaded && object2.IsLoaded && object3.IsLoaded);
+}
+```
 
 ## Requesting assets
 

@@ -25,6 +25,17 @@
         ]
       }
     ],
+    "overwrite": [
+      {
+        "files": [
+          "namespaces/**.md"
+        ],
+        "exclude": [
+          "obj/**",
+          "_site/**"
+        ]
+      }
+    ],
     "resource": [
       {
         "files": [
