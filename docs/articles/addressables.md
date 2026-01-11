@@ -25,7 +25,7 @@ You can do this by running
 op.Completed += (handle) =>
 {
     // Put your code here
-	// handle is effectively the same as op
+    // handle is effectively the same as op
 };
 ```
 This code will be executed when the asset has finished loading. If it has already
@@ -38,8 +38,8 @@ to you the asset will be loaded. For example
 IEnumerator LoadAssetAndThenDoStuff()
 {
     AsyncOperationHandle<GameObject> op = Addressables.LoadAssetAsync<GameObject>(Key);  // Assuming key is defined elsewhere
-	yield return op;
-	// Do stuff with the op, which has now finished loading
+    yield return op;
+    // Do stuff with the op, which has now finished loading
 }
 ```
 
@@ -64,6 +64,6 @@ projectiles to fail to exist.
 It is not strictly necessary to unload the asset, but may be a good
 thing to do if the asset is unlikely to be used.
 
-For convenience, AssetHelper provides the @"Silksong.AssetHelper.Managed.AddressableAsset`1" class
+For convenience, AssetHelper provides the @"Silksong.AssetHelper.ManagedAssets.AddressableAsset`1" class
 to wrap an addressable asset. This is a single instance that can freely be loaded and unloaded,
 without having to construct a new instance.

@@ -8,17 +8,17 @@ using System.IO;
 
 namespace Silksong.AssetHelper;
 
+// TODO - remove this when assetstools.net gets updated
 internal static class AssetsToolsPatch
 {
-    private static ILHook? _atHook;
-    private static Hook? _atChook;
+    private static ILHook? _atIteratorHook;
+    private static Hook? _atCopyHook;
 
 
     public static void Init()
     {
-        // TODO - remove this when assetstools.net gets updated
-        _atHook = new ILHook(typeof(AssetTypeValueIterator).GetMethod(nameof(AssetTypeValueIterator.ReadNext)), PatchATVI);
-        _atChook = new Hook(typeof(Net35Polyfill).GetMethod(nameof(Net35Polyfill.CopyToCompat)), PatchC2C);
+        _atIteratorHook = new ILHook(typeof(AssetTypeValueIterator).GetMethod(nameof(AssetTypeValueIterator.ReadNext)), PatchATVI);
+        _atCopyHook = new Hook(typeof(Net35Polyfill).GetMethod(nameof(Net35Polyfill.CopyToCompat)), PatchC2C);
     }
 
     /// <summary>
@@ -44,7 +44,7 @@ internal static class AssetsToolsPatch
     }
 
     /// <summary>
-    /// Fixes a bug with AssetTypeValueIterator where it moves 4 bytes forward when reading a double rather than 8
+    /// Fixes a bug with AssetTypeValueIterator where it moves 4 bytes forward when reading a double rather than 8.
     /// </summary>
     private static void PatchATVI(ILContext il)
     {

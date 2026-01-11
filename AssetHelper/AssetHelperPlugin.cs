@@ -10,7 +10,13 @@ using UnityEngine.AddressableAssets;
 
 namespace Silksong.AssetHelper;
 
+// We don't want to create a menu because any config options we add in the future are either
+// intended for devs or shouldn't be toggled while in game.
+// Adding this for forward compatibility
+internal class ModMenuIgnoreAttribute : Attribute { }
+
 [BepInAutoPlugin(id: "io.github.flibber-hk.assethelper")]
+[ModMenuIgnore]
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 public partial class AssetHelperPlugin : BaseUnityPlugin
 {
@@ -40,10 +46,10 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
 
     private static void InitLibLogging()
     {
-        ManualLogSource ahlLog = BepInEx.Logging.Logger.CreateLogSource("AssetHelper.Lib");
-        AssetHelperLib.Logging.OnLog += ahlLog.LogInfo;
-        AssetHelperLib.Logging.OnLogWarning += ahlLog.LogWarning;
-        AssetHelperLib.Logging.OnLogError += ahlLog.LogError;
+        ManualLogSource libLogger = BepInEx.Logging.Logger.CreateLogSource("AssetHelper.Lib");
+        AssetHelperLib.Logging.OnLog += libLogger.LogInfo;
+        AssetHelperLib.Logging.OnLogWarning += libLogger.LogWarning;
+        AssetHelperLib.Logging.OnLogError += libLogger.LogError;
     }
 
     private IEnumerator Start()
