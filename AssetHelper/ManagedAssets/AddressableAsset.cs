@@ -84,6 +84,18 @@ public class AddressableAsset<T>(string Key)
     }
 
     /// <summary>
+    /// Load the underlying asset and returns the operation handle. This operation is idempotent.
+    /// 
+    /// This should be called prior to using the asset.
+    /// </summary>
+    /// <returns></returns>
+    public AsyncOperationHandle<T>? LoadAsync()
+    {
+        Load();
+        return Handle;
+    }
+
+    /// <summary>
     /// Unload the underlying asset. This operation is idempotent.
     /// 
     /// This should not be called if the asset is still in use.
