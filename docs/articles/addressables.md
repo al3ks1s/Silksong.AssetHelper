@@ -14,38 +14,59 @@ AsyncOperationHandle<T> op = Addressables.LoadAssetAsync<T>(key);
 ```
 Here, `T` is the type of the asset (often this will be GameObject).
 
+If you are using any of the AssetHelper helper classes which implement the
+@"Silksong.AssetHelper.ManagedAssets.IManagedAsset" interface, you will still have to interact with a handle.
+For example, with the  @"Silksong.AssetHelper.ManagedAssets.AddressableAsset`1" class, the
+@"Silksong.AssetHelper.ManagedAssets.AddressableAsset`1.Handle" property will
+return a handle for which the following all apply.
+
 ## Waiting for the asset to load
 
-When you load the asset, it will not be ready immediately. There are three ways you
+When you ask to load the asset, it will not be ready immediately. There are three ways you
 can access it:
 
 - Subscribe to the Completed event
+
 You can do this by running
 ```cs
 op.Completed += (handle) =>
 {
     // Put your code here
-    // handle is effectively the same as op
+    // handle is effectively the same as op, and you can access
+	// the loaded asset from handle.Result as with op
 };
 ```
 This code will be executed when the asset has finished loading. If it has already
 finished loading, this code will be executed at the end of the frame.
 
 - Yield return the handle
+
 If you are running a coroutine, you can yield and when control comes back
 to you the asset will be loaded. For example
 ```cs
 IEnumerator LoadAssetAndThenDoStuff()
 {
-    AsyncOperationHandle<GameObject> op = Addressables.LoadAssetAsync<GameObject>(Key);  // Assuming key is defined elsewhere
+    AsyncOperationHandle<GameObject> op = Addressables.LoadAssetAsync<GameObject>(Key);  // Assuming Key is defined elsewhere
     yield return op;
     // Do stuff with the op, which has now finished loading
+}
+
+// Alternative, using an AddressableAsset<GameObject>
+
+private AddressableAsset<GameObject> _managedAsset;  // This should be defined in the usual way
+
+IEnumerator LoadAssetAndThenDoStuff()
+{
+    yield return _managedAsset.Load();  // Load returns an AsyncOperationHandle<GameObject> which can be yielded as usual
+	// Do stuff with _managedAsset.Handle, which has now finished loading
 }
 ```
 
 - Wait until the asset is loaded
-You can do this by calling `op.WaitForCompletion();`. This will block the main thread until
-the asset has finished loading, so is advised against where possible.
+
+You can do this by calling `op.WaitForCompletion();`. This will block the main thread (i.e. freeze the game)
+until the asset has finished loading, so it is generally preferable to use one of the previous
+two options if possible.
 
 ## Accessing the asset
 
@@ -64,6 +85,5 @@ projectiles to fail to exist.
 It is not strictly necessary to unload the asset, but may be a good
 thing to do if the asset is unlikely to be used.
 
-For convenience, AssetHelper provides the @"Silksong.AssetHelper.ManagedAssets.AddressableAsset`1" class
-to wrap an addressable asset. This is a single instance that can freely be loaded and unloaded,
-without having to construct a new instance.
+If using helper classes implementing the @"Silksong.AssetHelper.ManagedAssets.IManagedAsset" interface,
+the handle should not be unloaded in this way; instead, the relevant Unload method should be used.

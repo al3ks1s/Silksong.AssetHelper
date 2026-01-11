@@ -12,7 +12,7 @@ namespace Silksong.AssetHelper.ManagedAssets;
 /// Class representing a collection of Addressable assets of the same type that are
 /// loaded together.
 /// </summary>
-public class AddressableAssetGroup<T>
+public class AddressableAssetGroup<T> : IManagedAsset
 {
     private Dictionary<string, string> _keyLookup;
 
@@ -113,6 +113,8 @@ public class AddressableAssetGroup<T>
 
         return GetYieldInstruction();
     }
+
+    void IManagedAsset.Load() => Load();
 
     /// <summary>
     /// Access a loaded asset by name.

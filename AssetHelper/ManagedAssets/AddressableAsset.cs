@@ -14,7 +14,7 @@ namespace Silksong.AssetHelper.ManagedAssets;
 /// </summary>
 /// <typeparam name="T">The type of the asset to load.</typeparam>
 /// <param name="key">The Addressables Key used to load the asset.</param>
-public class AddressableAsset<T>(string key)
+public class AddressableAsset<T>(string key) : IManagedAsset
 {
     /// <summary>
     /// The Addressables Key used to load the asset.
@@ -95,6 +95,8 @@ public class AddressableAsset<T>(string key)
         }
         return Handle;
     }
+
+    void IManagedAsset.Load() => Load();
 
     /// <summary>
     /// Unload the underlying asset. This operation is idempotent.

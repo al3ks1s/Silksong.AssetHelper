@@ -21,7 +21,7 @@ should not be prior to GameManager.Awake.
 
 ## Instantiate your assets
 
-The assets can be instantiated at any time from the AddressableAsset instance,
+The assets can be instantiated at any time from the AddressableAsset instance (provided it has been loaded),
 for example by using
 @"Silksong.AssetHelper.ManagedAssets.AddressableAssetExtensions.InstantiateAsset``1(Silksong.AssetHelper.ManagedAssets.AddressableAsset{``0})".
 
