@@ -25,6 +25,7 @@
     <PackageIcon>icon.png</PackageIcon>
     <PackageId>Silksong.AssetHelper</PackageId>
     <RepositoryUrl>https://github.com/flibber-hk/Silksong.AssetHelper</RepositoryUrl>
+    <Description>Library for helping with loading vanilla Silksong assets.</Description>
   </PropertyGroup>
   
   <ItemGroup>
@@ -40,6 +41,10 @@
     <PackageReference Include="UnityEngine.Modules" Version="6000.0.50" IncludeAssets="compile" />
   </ItemGroup>
 
+  <!--
+  Publicize Addressables and ResourceManager so custom Catalogs can be built.
+  We use the Krafs publicizer because BepInEx doesn't seem to like publicizing individual dlls in a package.
+  -->
   <ItemGroup>
     <PackageReference Include="Krafs.Publicizer" Version="2.3.0">
       <PrivateAssets>all</PrivateAssets>
@@ -50,6 +55,7 @@
     <Publicize Include="Unity.ResourceManager" IncludeCompilerGeneratedMembers="false" IncludeVirtualMembers="false" />
   </ItemGroup>
   
+  <!--Property needed by Krafs publicizer-->
   <PropertyGroup>
     <PublicizerRuntimeStrategies>Unsafe</PublicizerRuntimeStrategies>
   </PropertyGroup>
@@ -60,7 +66,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Silksong.UnityHelper" Version="1.1.1" />
     <PackageReference Include="MonoDetour.HookGen" Version="0.7.*" PrivateAssets="all" />
     <PackageReference Include="MonoDetour" Version="*" />
   </ItemGroup>

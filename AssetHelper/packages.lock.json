@@ -88,17 +88,6 @@
         "resolved": "1.2.0-silksong1.0.29315",
         "contentHash": "MwcUC0FMUn7aCwYHWgQegOBxNGgNBDie9nfg0GeodqbnfrHOjUZ06sZjq+0Iiz9/WBL8yd511YZujFS91FgVMw=="
       },
-      "Silksong.UnityHelper": {
-        "type": "Direct",
-        "requested": "[1.1.1, )",
-        "resolved": "1.1.1",
-        "contentHash": "+tmyQabhgk+b5DTpOc0umVBTLmNvP6DzqiAvpgG7IlYttq3uD64Iq64AK2SXQnmXi/AlbmNmhPtXNjTzDmrfzg==",
-        "dependencies": {
-          "BepInEx.Core": "5.4.21",
-          "HarmonyX": "2.9.0",
-          "UnityEngine.Modules": "6000.0.50"
-        }
-      },
       "UnityEngine.Modules": {
         "type": "Direct",
         "requested": "[6000.0.50, )",
