@@ -6,6 +6,7 @@ internal class LoadingBar : MonoBehaviour
     private RectTransform _fillImageRect;
     private GameObject _canvasObject;
     private CanvasGroup _canvasGroup;
+    private Text _statusText;
 
     public static LoadingBar Create()
     {
@@ -73,6 +74,26 @@ internal class LoadingBar : MonoBehaviour
         _fillImageRect.pivot = new Vector2(0, 0.5f);
         _fillImageRect.sizeDelta = Vector2.zero;
         _fillImageRect.anchoredPosition = Vector2.zero;
+
+        GameObject textObj = new("StatusText");
+        textObj.transform.SetParent(_canvasObject.transform);
+        _statusText = textObj.AddComponent<Text>();
+
+        _statusText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        _statusText.text = string.Empty;
+        _statusText.fontSize = 30;
+        _statusText.alignment = TextAnchor.MiddleCenter;
+        _statusText.color = Color.white;
+
+        RectTransform textRect = _statusText.rectTransform;
+        textRect.anchorMin = new Vector2(0.5f, 0.5f);
+        textRect.anchorMax = new Vector2(0.5f, 0.5f);
+        textRect.pivot = new Vector2(0.5f, 0f);
+        textRect.sizeDelta = new Vector2(400, 50);
+        textRect.anchoredPosition = new Vector2(0, 45);
+
+        // For testing
+        _statusText.text = "Loading...";
     }
 
     public void SetProgress(float progress)
@@ -84,6 +105,11 @@ internal class LoadingBar : MonoBehaviour
     public void SetVisible(bool visible)
     {
         _canvasGroup.alpha = visible ? 1f : 0f;
+    }
+
+    public void SetText(string text)
+    {
+        _statusText.text = text;
     }
 
     private void OnDestroy()

@@ -23,12 +23,13 @@ internal class NonSceneCatalog : BaseStartupTask
 
     public override IEnumerator Run(LoadingBar loadingBar)
     {
-        return CreateAndLoadCatalog();
+        return CreateAndLoadCatalog(loadingBar);
     }
 
-    private IEnumerator CreateAndLoadCatalog()
+    private IEnumerator CreateAndLoadCatalog(LoadingBar bar)
     {
         IEnumerator nonSceneCatalogCreate = CreateNonSceneAssetCatalog();
+        bar.SetText("Building non-scene catalog");
         while (nonSceneCatalogCreate.MoveNext())
         {
             yield return null;
@@ -37,6 +38,7 @@ internal class NonSceneCatalog : BaseStartupTask
 
         if (File.Exists(NonSceneCatalogPath) && AssetRequestAPI.RequestedNonSceneAssets.Count > 0)
         {
+            bar.SetText("Loading non-scene catalog");
             AssetHelperPlugin.InstanceLogger.LogInfo($"Loading non-scene catalog");
             AsyncOperationHandle<IResourceLocator> catalogLoadOp = Addressables.LoadContentCatalogAsync(NonSceneCatalogPath);
             yield return catalogLoadOp;

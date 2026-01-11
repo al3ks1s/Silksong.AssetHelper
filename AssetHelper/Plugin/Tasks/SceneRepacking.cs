@@ -50,12 +50,15 @@ internal class SceneRepacking : BaseStartupTask
     {
         IEnumerator repack = PrepareAndRun(bar);
 
+        bar.SetText("Repacking scenes");
         while (repack.MoveNext())
         {
             // Yield after each repack op is done
             yield return null;
         }
+        bar.SetProgress(1f);
 
+        bar.SetText("Building scene catalog");
         IEnumerator catalogCreate = CreateSceneAssetCatalog(_repackData);
         while (catalogCreate.MoveNext())
         {
@@ -67,6 +70,7 @@ internal class SceneRepacking : BaseStartupTask
         // Only load the catalog if anyone's requested scene assets
         if (_repackData.Count > 0)
         {
+            bar.SetText("Loading scene catalog");
             AssetHelperPlugin.InstanceLogger.LogInfo($"Loading scene catalog");
             AsyncOperationHandle<IResourceLocator> catalogLoadOp = Addressables.LoadContentCatalogAsync(SceneCatalogPath);
             yield return catalogLoadOp;
