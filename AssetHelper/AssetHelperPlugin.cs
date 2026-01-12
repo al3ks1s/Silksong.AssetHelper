@@ -13,7 +13,7 @@ namespace Silksong.AssetHelper;
 // We don't want to create a menu because any config options we add in the future are either
 // intended for devs or shouldn't be toggled while in game.
 // Adding this for forward compatibility
-internal class ModMenuIgnoreAttribute : Attribute { }
+[AttributeUsage(AttributeTargets.Class)] internal class ModMenuIgnoreAttribute : Attribute { }
 
 [BepInAutoPlugin(id: "io.github.flibber-hk.assethelper")]
 [ModMenuIgnore]
@@ -37,7 +37,7 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
 
         InitLibLogging();
         AssetsToolsPatch.Init();
-        BundleDeps.Setup();
+        BundleMetadata.Setup();
         AssetRepackManager.Hook();
         Addressables.ResourceManager.ResourceProviders.Add(new ChildGameObjectProvider());
 
