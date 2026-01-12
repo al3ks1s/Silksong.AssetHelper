@@ -13,7 +13,7 @@ If this applies to your use case, you may not need to use AssetHelper.
 
 ## Browse the asset list
 
-You can use the @"Silksong.AssetHelper.Core.DebugTools.DumpAllAssetNames" function
+You can use the @"Silksong.AssetHelper.Dev.DebugTools.DumpAllAssetNames" function
 from within your plugin to create a list of all asset names in non-scene bundles in the AssetHelper directory.
 This gives a list of all non-scene assets that can be loaded via AssetHelper.
 
@@ -21,7 +21,7 @@ You may be able to find the asset you're looking for in this file.
 
 ## Dump asset lists per scene
 
-You can use the @"Silksong.AssetHelper.Core.DebugTools.DumpGameObjectPaths(System.String,System.Boolean)"
+You can use the @"Silksong.AssetHelper.Dev.DebugTools.DumpGameObjectPaths(System.String,System.Boolean)"
 function to create a list of all gameObject names in a particular scene in the AssetHelper directory.
 This is a good way to find the game object path that should be passed to AssetHelper.
 

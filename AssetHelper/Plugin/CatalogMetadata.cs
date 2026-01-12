@@ -17,7 +17,7 @@ internal class CatalogMetadata
 /// </summary>
 internal class SceneCatalogMetadata : CatalogMetadata
 {
-    // TODO - list catalogued objects
+    // Could list catalogued objects but I think it's unnecessary
 }
 
 /// <summary>

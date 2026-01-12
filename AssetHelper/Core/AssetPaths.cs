@@ -72,16 +72,4 @@ public static class AssetPaths
     /// Directory containing this assembly.
     /// </summary>
     internal static string AssemblyFolder => Directory.GetParent(typeof(AssetPaths).Assembly.Location).FullName;
-
-    private static string _debugDataDir = Path.Combine(AssemblyFolder, "DebugData");
-
-    /// <summary>
-    /// The directory where functions in <see cref="DebugTools"/> write their output.
-    /// 
-    /// This is a subfolder of this plugin's assembly.
-    /// </summary>
-    public static string DebugDataDir
-    {
-        get => _debugDataDir.CreateIfNeeded();
-    }
 }

@@ -225,8 +225,6 @@ internal class SceneRepacking : BaseStartupTask
 
     private IEnumerator CreateSceneAssetCatalog(RepackDataCollection data)
     {
-        // TODO - check game objects in metadata
-        // for now we can just check if there's a metadata change
         string catalogMetadataPath = Path.ChangeExtension(SceneCatalogPath, ".json");
 
         if (!_didRepack

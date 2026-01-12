@@ -2,14 +2,15 @@
 using AssetsTools.NET.Extra;
 using Silksong.AssetHelper.Internal;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace Silksong.AssetHelper.Core;
 
 /// <summary>
-/// Helpers for determining bundle dependencies, with the results automatically cached.
+/// Helpers for determining bundle metadata, with the results automatically cached.
 /// </summary>
-public static class BundleDeps
+public static class BundleMetadata
 {
     internal static void Setup()
     {
@@ -24,6 +25,8 @@ public static class BundleDeps
 
     private static Dictionary<string, string> GenerateCabLookup()
     {
+        Stopwatch sw = Stopwatch.StartNew();
+
         AssetsManager mgr = new();
 
         string bundleFolder = AssetPaths.BundleFolder;
@@ -37,7 +40,11 @@ public static class BundleDeps
             BundleFileInstance bun = mgr.LoadBundleFile(f);
             string cab = bun.file.GetFileName(0).Split(".")[0].ToLowerInvariant();
             lookup[cab] = key;
+            mgr.UnloadAll();
         }
+
+        sw.Stop();
+        AssetHelperPlugin.InstanceLogger.LogInfo($"Generated CAB lookup in {sw.ElapsedMilliseconds} ms");
 
         return lookup;
     }

@@ -15,22 +15,44 @@ using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
 using Logger = BepInEx.Logging.Logger;
 using NameListLookup = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
+using Silksong.AssetHelper.Core;
 
-namespace Silksong.AssetHelper.Core;
+namespace Silksong.AssetHelper.Dev;
 
 /// <summary>
 /// Class providing tools to help find information about the asset database.
+/// 
+/// The methods on this class should not be used in production code, and may be changed at any time.
 /// </summary>
 public static class DebugTools
 {
     private static readonly ManualLogSource Log = Logger.CreateLogSource($"AssetHelper.{nameof(DebugTools)}");
+
+    private static string _debugDataDir = Path.Combine(AssetPaths.AssemblyFolder, "DebugData");
+
+    /// <summary>
+    /// The directory where functions in <see cref="Dev.DebugTools"/> write their output.
+    /// 
+    /// This is a subfolder of this plugin's assembly.
+    /// </summary>
+    public static string DebugDataDir
+    {
+        get
+        {
+            if (!Directory.Exists(_debugDataDir))
+            {
+                Directory.CreateDirectory(_debugDataDir);
+            }
+            return _debugDataDir;
+        }
+    }
 
     /// <summary>
     /// Dump all addressable keys to the bundle_keys.json file in the debug data dir.
     /// </summary>
     public static void DumpAddressablesKeys()
     {
-        string dumpFile = Path.Combine(AssetPaths.DebugDataDir, "bundle_keys.json");
+        string dumpFile = Path.Combine(DebugDataDir, "bundle_keys.json");
 
         AddressablesData.InvokeAfterAddressablesLoaded(() => AddressablesData.BundleKeys.SerializeToFileInBackground(dumpFile));
     }
@@ -47,7 +69,7 @@ public static class DebugTools
 
     private static void DumpAllAssetNamesInternal()
     {
-        string dumpFile = Path.Combine(AssetPaths.DebugDataDir, "asset_names.json");
+        string dumpFile = Path.Combine(DebugDataDir, "asset_names.json");
 
         NameListLookup assetNames = [];
         NameListLookup sceneNames = [];
@@ -122,7 +144,7 @@ public static class DebugTools
 
         LocatorInfo locatorInfo = new() { LocatorID = locator.LocatorId, Infos = assetInfos };
 
-        locatorInfo.SerializeToFileInBackground(Path.Combine(AssetPaths.DebugDataDir, fileName));
+        locatorInfo.SerializeToFileInBackground(Path.Combine(DebugDataDir, fileName));
     }
 
     private class LocatorInfo
@@ -182,7 +204,7 @@ public static class DebugTools
     /// which can be quite slow.
     /// </summary>
     /// <exception cref="InvalidOperationException">Raised if this is called before Addressables is ready.</exception>
-    public static LoadedBundleNames GetLoadedBundleNames(out List<string> names, out List<string> unknown)
+    public static LoadedBundleNames GetLoadedBundleNames()
     {
         if (!AddressablesData.IsAddressablesLoaded)
         {
@@ -191,8 +213,8 @@ public static class DebugTools
 
         _bundleNameLookup ??= CachedObject<Dictionary<string, string>>.CreateSynced("bundle_name_lookup.json", GenerateBundleNameLookup).Value;
 
-        names = [];
-        unknown = [];
+        List<string> names = [];
+        List<string> unknown = [];
 
         foreach (string bunName in AssetBundle.GetAllLoadedAssetBundles().Select(b => b.name))
         {
@@ -215,12 +237,15 @@ public static class DebugTools
     public class LoadedBundleNames(List<string> names, List<string> unknown)
     {
         /// <summary>
-        /// Names given as paths relative to the bundle base dir.
+        /// Readable names given as paths relative to the bundle base dir.
         /// </summary>
-        public List<string> Names = names;
+        public List<string> VanillaBundleNames = names;
+
+        // TODO - figure out a sensible way to include repacked bundles
+        // public List<string> RepackedSceneBundles = repacked;
 
         /// <summary>
-        /// Names of bundles that could not be found in the bundle base dir (e.g. modded bundles).
+        /// Internal names of bundles that could not be found in the bundle base dir (e.g. modded bundles).
         /// </summary>
         public List<string> Unknown = unknown;
     }
@@ -236,7 +261,7 @@ public static class DebugTools
     public static void DumpGameObjectPaths(string sceneName, bool compressed)
     {
         string name = $"paths_{sceneName}" + (compressed ? "_compressed.json" : ".json");
-        string outPath = Path.Combine(AssetPaths.DebugDataDir, name);
+        string outPath = Path.Combine(DebugDataDir, name);
 
         AssetsManager mgr = BundleUtils.CreateDefaultManager();
         BundleFileInstance bunInst = mgr.LoadBundleFile(AssetPaths.GetScenePath(sceneName));

@@ -73,7 +73,7 @@ internal class CustomCatalogBuilder
 
         // Get dependency list
         List<string> dependencyKeys = [repackedSceneBundleKey];
-        foreach (string dep in BundleDeps.DetermineDirectDeps($"scenes_scenes_scenes/{sceneName}.bundle"))
+        foreach (string dep in BundleMetadata.DetermineDirectDeps($"scenes_scenes_scenes/{sceneName}.bundle"))
         {
             string depKey = dep.Replace(".bundle", "");
             _includedBaseBundles.Add(depKey);
@@ -98,7 +98,7 @@ internal class CustomCatalogBuilder
         string bundleKey = bundle.Replace(".bundle", "");
         _includedBaseBundles.Add(bundleKey);
         List<string> dependencyKeys = [_basePrimaryKeys[bundleKey]];
-        foreach (string dep in BundleDeps.DetermineDirectDeps(bundle))
+        foreach (string dep in BundleMetadata.DetermineDirectDeps(bundle))
         {
             string depKey = dep.Replace(".bundle", "");
             _includedBaseBundles.Add(depKey);
@@ -115,7 +115,6 @@ internal class CustomCatalogBuilder
 
     public void AddCatalogEntry(ContentCatalogDataEntry entry) => _addedEntries.Add(entry);
 
-    // TODO - this should produce information about the catalog
     public string Build(string? catalogId = null)
     {
         catalogId ??= _primaryKeyPrefix;
