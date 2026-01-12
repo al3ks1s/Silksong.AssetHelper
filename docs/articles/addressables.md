@@ -33,7 +33,7 @@ op.Completed += (handle) =>
 {
     // Put your code here
     // handle is effectively the same as op, and you can access
-	// the loaded asset from handle.Result as with op
+    // the loaded asset from handle.Result as with op
 };
 ```
 This code will be executed when the asset has finished loading. If it has already
@@ -58,7 +58,7 @@ private AddressableAsset<GameObject> _managedAsset;  // This should be defined i
 IEnumerator LoadAssetAndThenDoStuff()
 {
     yield return _managedAsset.Load();  // Load returns an AsyncOperationHandle<GameObject> which can be yielded as usual
-	// Do stuff with _managedAsset.Handle, which has now finished loading
+    // Do stuff with _managedAsset.Handle, which has now finished loading
 }
 ```
 
@@ -86,4 +86,5 @@ It is not strictly necessary to unload the asset, but may be a good
 thing to do if the asset is unlikely to be used.
 
 If using helper classes implementing the @"Silksong.AssetHelper.ManagedAssets.IManagedAsset" interface,
-the handle should not be unloaded in this way; instead, the relevant Unload method should be used.
+the handle should not be unloaded in this way; instead, the 
+@"Silksong.AssetHelper.ManagedAssets.IManagedAsset.Unload" method should be used.

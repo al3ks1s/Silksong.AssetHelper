@@ -14,6 +14,20 @@ namespace Silksong.AssetHelper.ManagedAssets;
 /// </summary>
 public class AddressableAssetGroup<T> : IManagedAsset
 {
+    /// <summary>
+    /// Record representing a scene asset.
+    /// </summary>
+    /// <param name="SceneName">The name of the scene.</param>
+    /// <param name="ObjPath">The hierarchical path to the object.</param>
+    public record SceneAssetInfo(string SceneName, string ObjPath);
+
+    /// <summary>
+    /// Record representing a non-scene asset.
+    /// </summary>
+    /// <param name="BundleName">The name of the bundle containing the asset.</param>
+    /// <param name="AssetName">The name of the asset within the bundle.</param>
+    public record NonSceneAssetInfo(string BundleName, string AssetName);
+
     private Dictionary<string, string> _keyLookup;
 
     /// <summary>
@@ -36,8 +50,8 @@ public class AddressableAssetGroup<T> : IManagedAsset
     /// <param name="nonSceneAssets"></param>
     /// <exception cref="InvalidOperationException">Exception thrown if the request is made after plugins have finished Awake-ing.</exception>
     public static AddressableAssetGroup<T> RequestAndCreate(
-        List<(string name, string sceneName, string objPath)>? sceneAssets = null,
-        List<(string name, string bundleName, string assetName)>? nonSceneAssets = null)
+        Dictionary<string, SceneAssetInfo>? sceneAssets = null,
+        Dictionary<string, NonSceneAssetInfo>? nonSceneAssets = null)
     {
         if (!AssetRequestAPI.RequestApiAvailable)
         {
@@ -53,19 +67,19 @@ public class AddressableAssetGroup<T> : IManagedAsset
                 AssetHelperPlugin.InstanceLogger.LogWarning($"{nameof(AddressableAssetGroup<>)} instances for scene assets should have GameObject as the type argument!");
             }
 
-            foreach ((string name, string sceneName, string objPath) in sceneAssets)
+            foreach ((string name, SceneAssetInfo asset) in sceneAssets)
             {
-                AssetRequestAPI.RequestSceneAsset(sceneName, objPath);
-                keyLookup.Add(name, CatalogKeys.GetKeyForSceneAsset(sceneName, objPath));
+                AssetRequestAPI.RequestSceneAsset(asset.SceneName, asset.ObjPath);
+                keyLookup.Add(name, CatalogKeys.GetKeyForSceneAsset(asset.SceneName, asset.ObjPath));
             }
         }
 
         if (nonSceneAssets != null)
         {
-            foreach ((string name, string bundleName, string assetName) in nonSceneAssets)
+            foreach ((string name, NonSceneAssetInfo asset) in nonSceneAssets)
             {
-                AssetRequestAPI.RequestNonSceneAsset<T>(bundleName, assetName);
-                keyLookup.Add(name, CatalogKeys.GetKeyForNonSceneAsset(assetName));
+                AssetRequestAPI.RequestNonSceneAsset<T>(asset.BundleName, asset.AssetName);
+                keyLookup.Add(name, CatalogKeys.GetKeyForNonSceneAsset(asset.AssetName));
             }
         }
 
@@ -81,7 +95,7 @@ public class AddressableAssetGroup<T> : IManagedAsset
     /// until all assets are loaded.
     /// </summary>
     /// <returns></returns>
-    /// <exception cref="InvalidOperationException">If this function is called before loading the assets.</exception>
+    /// <exception cref="InvalidOperationException">If this function is called before calling <see cref="Load"/>.</exception>
     public CustomYieldInstruction GetYieldInstruction()
     {
         if (_handles == null)
