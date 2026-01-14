@@ -16,7 +16,7 @@ namespace Silksong.AssetHelper;
 [AttributeUsage(AttributeTargets.Class)]
 internal class ModMenuIgnoreAttribute : Attribute { }
 
-[BepInAutoPlugin(id: "io.github.flibber-hk.assethelper")]
+[BepInAutoPlugin(id: "org.silksong-modding.assethelper")]
 [BepInDependency("org.silksong-modding.i18n")]
 [ModMenuIgnore]
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
