@@ -4,15 +4,15 @@ The easiest way to use AssetHelper to load assets is as follows.
 
 ## Request assets during your plugin's Awake method
 
-Use the @"Silksong.AssetHelper.ManagedAssets.AddressableAsset`1.FromSceneAsset(System.String,System.String)"
-and @"Silksong.AssetHelper.ManagedAssets.AddressableAsset`1.FromNonSceneAsset(System.String,System.String)"
+Use the @"Silksong.AssetHelper.ManagedAssets.ManagedAsset`1.FromSceneAsset(System.String,System.String)"
+and @"Silksong.AssetHelper.ManagedAssets.ManagedAsset`1.FromNonSceneAsset(System.String,System.String)"
 functions during your plugin's Awake method to create wrappers around any assets you want to access.
 These will automatically be requested via the @"Silksong.AssetHelper.Plugin.AssetRequestAPI"
 API
 
 ## Load up assets
 
-You can call the @"Silksong.AssetHelper.ManagedAssets.AddressableAsset`1.Load"
+You can call the @"Silksong.AssetHelper.ManagedAssets.ManagedAsset`1.Load"
 method to load up the assets. The absolute earliest this can theoretically be done is in
 a callback to @"Silksong.AssetHelper.Plugin.AssetRequestAPI.InvokeAfterBundleCreation(System.Action)".
 However, this will often break; in general, it is best to wait either until the player enters a scene where your
@@ -21,9 +21,9 @@ should not be prior to GameManager.Awake.
 
 ## Instantiate your assets
 
-The assets can be instantiated at any time from the AddressableAsset instance (provided it has been loaded),
+The assets can be instantiated at any time from the ManagedAsset instance (provided it has been loaded),
 for example by using
-@"Silksong.AssetHelper.ManagedAssets.AddressableAssetExtensions.InstantiateAsset``1(Silksong.AssetHelper.ManagedAssets.AddressableAsset{``0})".
+@"Silksong.AssetHelper.ManagedAssets.ManagedAssetExtensions.InstantiateAsset``1(Silksong.AssetHelper.ManagedAssets.ManagedAsset{``0})".
 
 ## Example
 
@@ -41,12 +41,12 @@ using UnityEngine.SceneManagement;
 [BepInDependency(AssetHelperPlugin.Id)]
 public class FleaSignPlugin : BaseUnityPlugin
 {
-    private AddressableAsset<GameObject> _fleaSign;
+    private ManagedAsset<GameObject> _fleaSign;
 
     void Awake()
     {
         // Constructing this object during Awake means it is automatically requested to be repacked.
-        _fleaSign = AddressableAsset<GameObject>.FromSceneAsset(
+        _fleaSign = ManagedAsset<GameObject>.FromSceneAsset(
             // Note - scene names are case-insensitive, this could also be Bone_02
             sceneName: "bone_02",
             // If the object had a parent, you'd need to put it as parentName/caravan_signpost

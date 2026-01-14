@@ -5,6 +5,7 @@ using Silksong.AssetHelper.Plugin;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using SysTask = System.Threading.Tasks.Task;
 
 namespace Silksong.AssetHelper.ManagedAssets;
 
@@ -12,7 +13,7 @@ namespace Silksong.AssetHelper.ManagedAssets;
 /// Class representing a collection of Addressable assets of the same type that are
 /// loaded together.
 /// </summary>
-public class AddressableAssetGroup<T> : IManagedAsset
+public class ManagedAssetGroup<T> : IManagedAsset
 {
     /// <summary>
     /// Record representing a scene asset.
@@ -37,19 +38,19 @@ public class AddressableAssetGroup<T> : IManagedAsset
     /// The name should be a string used to access the individual asset; names should be unique but
     /// their values do not matter.
     /// The key should be an Addressables key.</param>
-    public AddressableAssetGroup(Dictionary<string, string> keyLookup)
+    public ManagedAssetGroup(Dictionary<string, string> keyLookup)
     {
         _keyLookup = keyLookup;
     }
 
     /// <summary>
-    /// Request keys for the given scene and/or non-scene assets, and create an <see cref="AddressableAssetGroup{T}"></see>
+    /// Request keys for the given scene and/or non-scene assets, and create an <see cref="ManagedAssetGroup{T}"></see>
     /// managing them.
     /// </summary>
     /// <param name="sceneAssets">A mapping (key) -> </param>
     /// <param name="nonSceneAssets"></param>
     /// <exception cref="InvalidOperationException">Exception thrown if the request is made after plugins have finished Awake-ing.</exception>
-    public static AddressableAssetGroup<T> RequestAndCreate(
+    public static ManagedAssetGroup<T> RequestAndCreate(
         Dictionary<string, SceneAssetInfo>? sceneAssets = null,
         Dictionary<string, NonSceneAssetInfo>? nonSceneAssets = null
     )
@@ -68,7 +69,7 @@ public class AddressableAssetGroup<T> : IManagedAsset
             if (typeof(T) != typeof(GameObject))
             {
                 AssetHelperPlugin.InstanceLogger.LogWarning(
-                    $"{nameof(AddressableAssetGroup<>)} instances for scene assets should have GameObject as the type argument!"
+                    $"{nameof(ManagedAssetGroup<>)} instances for scene assets should have GameObject as the type argument!"
                 );
             }
 
@@ -109,7 +110,7 @@ public class AddressableAssetGroup<T> : IManagedAsset
         if (_handles == null)
         {
             throw new InvalidOperationException(
-                $"This {nameof(AddressableAssetGroup<>)} must be loaded before awaiting!"
+                $"This {nameof(ManagedAssetGroup<>)} must be loaded before awaiting!"
             );
         }
 
@@ -138,7 +139,24 @@ public class AddressableAssetGroup<T> : IManagedAsset
         return GetYieldInstruction();
     }
 
-    void IManagedAsset.Load() => Load();
+    object? IManagedAsset.Load() => Load();
+
+    /// <summary>
+    /// Get an awaitable for the load operation to be used in an <see langword="async"/>/<see langword="await"/> context.
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException">If this function is called before calling <see cref="Load"/>.</exception>
+    public SysTask GetTask()
+    {
+        if (_handles == null)
+        {
+            throw new InvalidOperationException(
+                $"This {nameof(ManagedAssetGroup<>)} must be loaded before awaiting!"
+            );
+        }
+
+        return SysTask.WhenAll(_handles.Values.Select(x => x.Task));
+    } 
 
     /// <summary>
     /// Access a loaded asset by name.

@@ -1,4 +1,19 @@
-# Caching
+# Timelines and Caching
+
+AssetHelper performs all of its preparation during the StartManager.Start coroutine (before the
+base game coroutine runs). The following reflects the timeline of events as the game starts up.
+
+* BepInEx initializes, and plugins Awake
+* Plugins Start
+* Addressables loads the base game catalog, and callbacks to
+@"Silksong.AssetHelper.Core.AddressablesData.InvokeAfterAddressablesLoaded(System.Action)"
+are executed
+* The Pre_Menu_Intro scene is loaded
+* AssetHelper runs repacking and builds catalogs
+* Base game objects like the GameManager are set up
+* The Menu_Title scene is loaded
+
+## Caching
 
 AssetHelper caches a number of files to reduce the computation burden of future times the game is
 loaded up. In some cases there is a technical consideration, since Addressables does not expect
@@ -11,7 +26,7 @@ to verify that things should work for your users - although generally this is no
 It may also be the case that existing cached files are broken - in this case the user might be able
 to fix the issue by clearing the cache.
 
-## Bundle metadata lookups
+### Bundle metadata lookups
 
 These can include lookups of the following metadata:
 * CAB names - these are internal bundle names that Unity uses to resolve dependencies.
@@ -21,7 +36,7 @@ These can include lookups of the following metadata:
 In general these are not too costly to compute but it is still noticeably more efficient to cache the outputs.
 These are invalidated each time Silksong updates.
 
-## Repacked scene bundles
+### Repacked scene bundles
 
 These bundles contain assets from scene bundles that have been repacked into non-scene bundles
 for easier access. There is one bundle per scene, and these bundles are shared between all mods.
@@ -35,7 +50,13 @@ These bundles will be invalidated if the hash of the bundle is changed (in other
 content of the base game bundle is changed). If Silksong is updated in such a way that the
 base game bundle is not modified, then any existing repacked bundles will remain valid.
 
-## Addressables catalogs
+AssetHelper keeps track of which assets are inside the bundles by writing a json file
+in the repacked bundles folder with this information. If this file is manually deleted,
+all knowledge of what is in the repacked bundles will be lost and bundles will be repacked
+again. If an individual repacked bundle is manually deleted, AssetHelper will forget what was originally
+repacked into the bundle.
+
+### Addressables catalogs
 
 AssetHelper writes an Addressables catalog for repacked scene assets and a catalog for requested
 non-scene assets.
@@ -52,7 +73,7 @@ If no new assets have been added since the last time the game was loaded, the ca
 
 All catalogs will be regenerated when the Silksong version changes.
 
-## Downpatching
+### Downpatching
 
 Changing Silksong version can and will cause cached data to be rewritten. If a player is going to be
 downpatching their Silksong version frequently, then they should take care to use a separate

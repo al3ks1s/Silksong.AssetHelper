@@ -107,6 +107,8 @@ internal class SceneRepacking : BaseStartupTask
         }
 
         // Any data with a metadata mismatch should be removed from the dictionary
+        // Also remove data if they have manually deleted the file, as a way to individually
+        // reset scene data
         _repackData = _repackData
             .Where(kvp => !MetadataMismatch(kvp.Key, kvp.Value) && File.Exists(GetBundlePathForScene(kvp.Key)))
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);

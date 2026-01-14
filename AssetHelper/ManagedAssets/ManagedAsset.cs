@@ -14,7 +14,7 @@ namespace Silksong.AssetHelper.ManagedAssets;
 /// </summary>
 /// <typeparam name="T">The type of the asset to load.</typeparam>
 /// <param name="key">The Addressables Key used to load the asset.</param>
-public class AddressableAsset<T>(string key) : IManagedAsset
+public class ManagedAsset<T>(string key) : IManagedAsset
 {
     /// <summary>
     /// The Addressables Key used to load the asset.
@@ -46,12 +46,12 @@ public class AddressableAsset<T>(string key) : IManagedAsset
     /// <param name="sceneName">The name of the scene.</param>
     /// <param name="objPath">The hierarchical path to the game object.</param>
     /// <returns></returns>
-    public static AddressableAsset<T> FromSceneAsset(string sceneName, string objPath)
+    public static ManagedAsset<T> FromSceneAsset(string sceneName, string objPath)
     {
         if (typeof(T) != typeof(GameObject))
         {
             AssetHelperPlugin.InstanceLogger.LogWarning(
-                $"{nameof(AddressableAsset<>)} instances for scene assets should have GameObject as the type argument!"
+                $"{nameof(ManagedAsset<>)} instances for scene assets should have GameObject as the type argument!"
             );
         }
 
@@ -74,7 +74,7 @@ public class AddressableAsset<T>(string key) : IManagedAsset
     /// <param name="assetName">The name of the asset in its bundle.</param>
     /// <param name="bundleName">The name of the bundle containing the asset.</param>
     /// <returns></returns>
-    public static AddressableAsset<T> FromNonSceneAsset(string assetName, string? bundleName = null)
+    public static ManagedAsset<T> FromNonSceneAsset(string assetName, string? bundleName = null)
     {
         if (AssetRequestAPI.RequestApiAvailable && !string.IsNullOrEmpty(bundleName))
         {
@@ -100,7 +100,7 @@ public class AddressableAsset<T>(string key) : IManagedAsset
         return Handle;
     }
 
-    void IManagedAsset.Load() => Load();
+    object? IManagedAsset.Load() => Load();
 
     /// <summary>
     /// Unload the underlying asset. This operation is idempotent.

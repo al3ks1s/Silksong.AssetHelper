@@ -3,14 +3,14 @@
 namespace Silksong.AssetHelper.ManagedAssets;
 
 /// <summary>
-/// Extensions for working with instances of <see cref="AddressableAsset{T}"/>.
+/// Extensions for working with instances of <see cref="ManagedAsset{T}"/>.
 /// </summary>
-public static class AddressableAssetExtensions
+public static class ManagedAssetExtensions
 {
     /// <summary>
     /// Instantiate the asset managed by this instance.
     /// </summary>
-    public static T InstantiateAsset<T>(this AddressableAsset<T> asset)
+    public static T InstantiateAsset<T>(this ManagedAsset<T> asset)
         where T : UObject
     {
         if (!asset.IsLoaded)
@@ -24,7 +24,7 @@ public static class AddressableAssetExtensions
     /// <summary>
     /// Instantiate an asset in this group accessed by key.
     /// </summary>
-    public static T InstantiateAsset<T>(this AddressableAssetGroup<T> group, string key)
+    public static T InstantiateAsset<T>(this ManagedAssetGroup<T> group, string key)
         where T : UObject
     {
         if (!group.IsLoaded)

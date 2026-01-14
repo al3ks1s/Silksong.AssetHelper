@@ -8,7 +8,11 @@ public interface IManagedAsset
     /// <summary>
     /// Load the asset(s) managed by this instance.
     /// </summary>
-    void Load();
+    /// <returns>
+    /// An object that can be "yield return"-ed in a coroutine to pause execution
+    /// until the load is complete.
+    /// </returns>
+    object? Load();
 
     /// <summary>
     /// Unload the asset(s) managed by this instance.

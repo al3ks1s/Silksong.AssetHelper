@@ -26,9 +26,9 @@ you will need to:
 It is a more efficient to start of each load at once, and only yield once. As an example:
 
 ```cs
-AddressableAsset<GameObject> object1 = ...;
-AddressableAsset<GameObject> object2 = ...;
-AddressableAsset<GameObject> object3 = ...;
+ManagedAsset<GameObject> object1 = ...;
+ManagedAsset<GameObject> object2 = ...;
+ManagedAsset<GameObject> object3 = ...;
 
 // Bad
 IEnumerator LoadAll()

@@ -16,8 +16,8 @@ Here, `T` is the type of the asset (often this will be GameObject).
 
 If you are using any of the AssetHelper helper classes which implement the
 @"Silksong.AssetHelper.ManagedAssets.IManagedAsset" interface, you will still have to interact with a handle.
-For example, with the  @"Silksong.AssetHelper.ManagedAssets.AddressableAsset`1" class, the
-@"Silksong.AssetHelper.ManagedAssets.AddressableAsset`1.Handle" property will
+For example, with the  @"Silksong.AssetHelper.ManagedAssets.ManagedAsset`1" class, the
+@"Silksong.AssetHelper.ManagedAssets.ManagedAsset`1.Handle" property will
 return a handle for which the following all apply.
 
 ## Waiting for the asset to load
@@ -51,9 +51,9 @@ IEnumerator LoadAssetAndThenDoStuff()
     // Do stuff with the op, which has now finished loading
 }
 
-// Alternative, using an AddressableAsset<GameObject>
+// Alternative, using an ManagedAsset<GameObject>
 
-private AddressableAsset<GameObject> _managedAsset;  // This should be defined in the usual way
+private ManagedAsset<GameObject> _managedAsset;  // This should be defined in the usual way
 
 IEnumerator LoadAssetAndThenDoStuff()
 {
