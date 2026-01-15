@@ -21,5 +21,5 @@ If manually uploading, instead copy the dependency string from the Thunderstore 
 AssetHelper should be added as a BepInEx dependency by putting the following attribute
 onto your plugin class, below the BepInAutoPlugin attribute.
 ```
-[BepInDependency(org.silksong-modding.assethelper)]
+[BepInDependency("org.silksong-modding.assethelper")]
 ```
