@@ -66,7 +66,7 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
 
     private IEnumerator Start()
     {
-        AssetRequestAPI.RequestApiAvailable = false;
+        AssetRequestAPI.CloseRequestAPI();
 
         // Addressables isn't initialized until the next frame
         yield return null;

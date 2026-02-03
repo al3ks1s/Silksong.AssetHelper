@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
+using Silksong.AssetHelper.Core;
 using Silksong.AssetHelper.Internal;
 using UnityEngine.AddressableAssets.ResourceLocators;
 
@@ -11,7 +13,14 @@ namespace Silksong.AssetHelper.Plugin;
 /// </summary>
 public static class AssetRequestAPI
 {
-    internal static bool RequestApiAvailable { get; set; } = true;
+    internal static AssetRequest Request { get; private set; } = new();
+
+    internal static void CloseRequestAPI()
+    {
+        RequestApiAvailable = false;
+    }
+
+    internal static bool RequestApiAvailable { get; private set; } = true;
 
     private static void VerifyRequest([CallerMemberName] string? caller = null)
     {
@@ -24,8 +33,6 @@ public static class AssetRequestAPI
     }
 
     internal static DelayedAction AfterBundleCreationComplete = new();
-
-    internal static AssetRequest Request { get; } = new();
 
     /// <summary>
     /// Invoke this action once AssetHelper has built the repacked scene bundles and loaded the new catalog.
