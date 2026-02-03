@@ -13,11 +13,26 @@ namespace Silksong.AssetHelper.Plugin;
 /// </summary>
 public static class AssetRequestAPI
 {
-    internal static AssetRequest Request { get; private set; } = new();
+    internal static AssetRequest Request { get; private set; }
+
+    private static string SerializedRequestPath => Path.Combine(AssetPaths.CacheDirectory, "accumulated_request.json");
+
+    static AssetRequestAPI()
+    {
+        if (JsonExtensions.TryLoadFromFile(SerializedRequestPath, out AssetRequest? req))
+        {
+            Request = req;
+        }
+        else
+        {
+            Request = new();
+        }
+    }
 
     internal static void CloseRequestAPI()
     {
         RequestApiAvailable = false;
+        Request.SerializeToFile(SerializedRequestPath);
     }
 
     internal static bool RequestApiAvailable { get; private set; } = true;
