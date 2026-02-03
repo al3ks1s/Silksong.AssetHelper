@@ -60,6 +60,12 @@ public static class BundleMetadata
 
             string filepath = Path.Combine(bundleFolder, key);
 
+            if (!File.Exists(filepath))
+            {
+                AssetHelperPlugin.InstanceLogger.LogError($"Bundle not found! Resolved key {key}\nThis may cause errors down the line");
+                continue;
+            }
+
             BundleFileInstance bun = mgr.LoadBundleFile(filepath);
             string cab = bun.file.GetFileName(0).Split(".")[0].ToLowerInvariant();
 
