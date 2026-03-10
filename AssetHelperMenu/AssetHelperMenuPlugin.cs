@@ -8,6 +8,7 @@ using Silksong.AssetHelper.Dev;
 using BepInEx.Configuration;
 using USceneManager = UnityEngine.SceneManagement.SceneManager;
 using Silksong.AssetHelper.Core;
+using Silksong.ModMenu.Models;
 
 namespace AssetHelperMenu;
 
@@ -64,8 +65,13 @@ public partial class AssetHelperMenuPlugin : BaseUnityPlugin, IModMenuCustomMenu
                     DumpGameObjectPaths(USceneManager.GetSceneAt(i).name);
                 }
             });
-
-            // TODO - add a button to dump a scene by name - blocked by ModMenu needing a text entry field
+            
+            TextInput<string> sceneEntryField = new TextInput<string>("Scene", TextModels.ForStrings(), "Choose a scene to dump");
+            sceneSubpageBuilder.Add(sceneEntryField);
+            sceneSubpageBuilder.AddButton("Dump selected scene", () =>
+            {
+                DumpGameObjectPaths(sceneEntryField.Model.Value);
+            });
 
             PaginatedMenuScreen sceneSubpage = sceneSubpageBuilder.Build();
 
