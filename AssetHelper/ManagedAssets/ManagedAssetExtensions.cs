@@ -56,9 +56,7 @@ public static class ManagedAssetExtensions
         }
     }
 
-    /// <summary>
-    /// Obsolete overload of <see cref="EnsureLoaded{T}(ManagedAssetBase{T})"/> kept for backward compatibility.
-    /// </summary>
+    /// <inheritdoc cref="EnsureLoaded{T}(ManagedAssetBase{T})" />
     [EditorBrowsable(EditorBrowsableState.Never)]
     public static void EnsureLoaded<T>(this ManagedAsset<T> asset)
         => EnsureLoaded<T>((ManagedAssetBase<T>)asset);
