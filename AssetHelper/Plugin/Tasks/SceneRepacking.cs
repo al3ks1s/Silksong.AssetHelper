@@ -303,7 +303,7 @@ internal class SceneRepacking : BaseStartupTask
             string bundlePath = GetBundlePathForScene(sceneName);
             string bundleFileName = Path.GetFileName(bundlePath);
             string serializedBundlePath = $"{GetSerializedBundleDirPrefix()}/{bundleFileName}";
-            cbr.AddRepackedSceneData(sceneName, repackBunData.Data, bundlePath, serializedBundlePath);
+            cbr.AddRepackedSceneData(sceneName, repackBunData.Data, null!, bundlePath, serializedBundlePath);
 
             // Add in requested child paths
             if (AssetRequestAPI.Request.SceneAssets.TryGetValue(sceneName, out HashSet<string> requested))

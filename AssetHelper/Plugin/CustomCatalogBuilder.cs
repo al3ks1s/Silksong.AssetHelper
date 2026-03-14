@@ -5,6 +5,7 @@ using System.Linq;
 using AssetHelperLib.Repacking;
 using Silksong.AssetHelper.CatalogTools;
 using Silksong.AssetHelper.Core;
+using Silksong.AssetHelper.Plugin.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.ResourceLocations;
@@ -82,7 +83,8 @@ internal class CustomCatalogBuilder
         return true;
     }
 
-    public void AddRepackedSceneData(string sceneName, RepackedBundleData data, string bundlePath, string? serializedBundlePath = null)
+    public void AddRepackedSceneData(
+        string sceneName, RepackedBundleData data, SceneCatalogInfo info, string bundlePath, string? serializedBundlePath = null)
     {
         // Create an entry for the bundle
         string repackedSceneBundleKey = $"{_primaryKeyPrefix}/SceneBundles/{sceneName}";
@@ -116,14 +118,28 @@ internal class CustomCatalogBuilder
         }
 
         // Create entries for the assets
-        foreach ((string containerPath, string objPath) in data.GameObjectAssets ?? [])
+        foreach (var rootGoInfo in info.RootGameObjects)
         {
             ContentCatalogDataEntry entry = CatalogEntryUtils.CreateAssetEntry(
-                containerPath,
+                rootGoInfo.ContainerPath,
                 typeof(GameObject),
                 dependencyKeys,
                 [
-                    $"{_primaryKeyPrefix}/Assets/{sceneName}/{objPath}",
+                    $"{_primaryKeyPrefix}/Assets/{sceneName}/{rootGoInfo.ObjPath}",
+                    CatalogKeys.GetKeyForAssetAtTransform(sceneName, rootGoInfo.TransformPathId)
+                ]
+            );
+            _addedEntries.Add(entry);
+        }
+
+        foreach (var childGoInfo in info.ChildGameObjects)
+        {
+            ContentCatalogDataEntry entry = CatalogEntryUtils.CreateChildGameObjectEntry(
+                CatalogKeys.GetKeyForAssetAtTransform(sceneName, childGoInfo.AncestorTransformPathId),
+                childGoInfo.RelativePath,
+                [
+                    $"{_primaryKeyPrefix}/Assets/{sceneName}/{childGoInfo.ObjPath}",
+                    CatalogKeys.GetKeyForAssetAtTransform(sceneName, childGoInfo.TransformPathId)
                 ]
             );
             _addedEntries.Add(entry);
