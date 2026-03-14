@@ -328,7 +328,7 @@ internal class SceneRepacking : BaseStartupTask
 
                     string parentKey = CatalogKeys.GetKeyForSceneAsset(sceneName, ancestorPath);
                     string childKey = CatalogKeys.GetKeyForSceneAsset(sceneName, child);
-                    ContentCatalogDataEntry entry = CatalogEntryUtils.CreateChildGameObjectEntry(parentKey, relativePath, childKey);
+                    ContentCatalogDataEntry entry = CatalogEntryUtils.CreateChildGameObjectEntry(parentKey, relativePath, [childKey]);
                     cbr.AddCatalogEntry(entry);
                 }
             }

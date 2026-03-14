@@ -55,7 +55,7 @@ internal class CustomCatalogBuilder
             string primaryKey = $"{_primaryKeyPrefix}/DependencyBundles/{bundleName}";
             ContentCatalogDataEntry entry = CatalogEntryUtils.CreateEntryFromLocation(
                 location,
-                primaryKey
+                [primaryKey]
             );
 
             _baseBundleEntries.Add(bundleName, entry);
@@ -122,7 +122,9 @@ internal class CustomCatalogBuilder
                 containerPath,
                 typeof(GameObject),
                 dependencyKeys,
-                $"{_primaryKeyPrefix}/Assets/{sceneName}/{objPath}"
+                [
+                    $"{_primaryKeyPrefix}/Assets/{sceneName}/{objPath}",
+                ]
             );
             _addedEntries.Add(entry);
         }
@@ -157,7 +159,7 @@ internal class CustomCatalogBuilder
                 asset,
                 assetType,
                 dependencyKeys,
-                $"{_primaryKeyPrefix}/{asset}"
+                [$"{_primaryKeyPrefix}/{asset}"]
             );
             _addedEntries.Add(entry);
         }
