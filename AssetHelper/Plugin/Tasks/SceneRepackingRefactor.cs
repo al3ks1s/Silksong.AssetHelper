@@ -107,7 +107,6 @@ internal class SceneRepackingRefactor : BaseStartupTask
                 loadingScreen.SetProgress((float)count / (float)total);
 
                 yield return null;
-
             }
 
             mainSw.Stop();
@@ -379,19 +378,24 @@ internal class SceneRepackingRefactor : BaseStartupTask
         return true;
     }
 
+    /// <summary>
+    /// Return true if the provided catalog info is capable of loading all assets requested
+    /// for the given scene.
+    /// </summary>
+    /// <param name="catalogInfo"></param>
+    /// <param name="sceneName"></param>
+    /// <returns></returns>
     private bool CanLoadAll(SceneCatalogInfo catalogInfo, string sceneName)
     {
         HashSet<string> existingAssets = new(catalogInfo.LoadableAssets);
 
-        foreach (string asset in AssetRequestAPI.Request.SceneAssets[sceneName])
+        if (!AssetRequestAPI.Request.SceneAssets.TryGetValue(sceneName, out HashSet<string> requested))
         {
-            if (!existingAssets.Contains(asset))
-            {
-                return false;
-            }
+            // If nothing was requested, then certainly everything requested can be loaded.
+            return true;
         }
 
-        return true;
+        return requested.IsSubsetOf(existingAssets);
     }
 
     private static string GetSerializedBundleDirPrefix()

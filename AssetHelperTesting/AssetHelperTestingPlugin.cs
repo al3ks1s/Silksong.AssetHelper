@@ -28,7 +28,7 @@ namespace AssetHelperTesting
 
         private void PrepareTests()
         {
-            MultiGoSpawn.Prepare();
+            LargeRequest.Prepare();
         }
     }
 }
