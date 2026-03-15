@@ -18,6 +18,7 @@ using System;
 using Silksong.AssetHelper.Plugin.LoadingPage;
 using AssetHelperLib.BundleTools;
 using GoInfo = AssetHelperLib.BundleTools.GameObjectLookup.GameObjectInfo;
+using Silksong.AssetHelper.Dev;
 
 namespace Silksong.AssetHelper.Plugin.Tasks;
 
@@ -27,12 +28,8 @@ internal class SceneRepackingRefactor : BaseStartupTask
 
     private static string CatalogMetadataPath => Path.ChangeExtension(SceneCatalogPath, ".json");
 
-    // (scene, gameObjs) that need to be repacked
-    private Dictionary<string, HashSet<string>> _toRepack = [];
-
     // Data about the repacked assets in the bundles on disk
     private RepackDataCollection _repackData = [];
-
 
     public override IEnumerator Run(ILoadingScreen loadingScreen)
     {
@@ -83,7 +80,7 @@ internal class SceneRepackingRefactor : BaseStartupTask
 
             Stopwatch mainSw = Stopwatch.StartNew();
 
-            int total = _toRepack.Count;
+            int total = scenesToRepack.Count;
             int count = 0;
 
             AssetHelperPlugin.InstanceLogger.LogInfo($"Repacking {total} scenes");
@@ -208,7 +205,7 @@ internal class SceneRepackingRefactor : BaseStartupTask
             ObjectNames = request.ToList(),
             ContainerPrefix = containerPrefix,
             OutBundlePath = GetBundlePathForScene(scene),
-            LateCallback = (ctx, data) => transformSeqs = BuildTransformSequences(ctx, request),
+            LateCallback = (ctx, data) => transformSeqs = BuildTransformSequences(ctx, data, request),
         };
         RepackedBundleData repackData = repacker.Repack(rParams);
 
@@ -290,14 +287,24 @@ internal class SceneRepackingRefactor : BaseStartupTask
     /// The number of path sequences for each game object path will match the number of game objects with
     /// that game object path.
     /// </summary>
-    private Dictionary<string, List<List<long>>> BuildTransformSequences(RepackingContext ctx, HashSet<string> request)
+    private Dictionary<string, List<List<long>>> BuildTransformSequences(
+        RepackingContext ctx, RepackedBundleData data, HashSet<string> request)
     {
         GameObjectLookup goLookup = ctx.GameObjLookup
             ?? GameObjectLookup.CreateFromFile(ctx.SceneAssetsManager, ctx.MainAssetsFileInstance);
 
         Dictionary<string, List<List<long>>> transformSeqs = [];
 
-        foreach (string objPath in request)
+        // We need to find transform sequences for all game objects in the request,
+        // and also all game objects in the bundle. The latter will only matter if there is a root game object
+        // in the repacked bundle that wasn't in the request, but has been included due to being a dependency
+        // for a requested asset.
+        HashSet<string> requiredPaths = [
+            .. request,
+            .. data.GameObjectAssets?.Values ?? Enumerable.Empty<string>()
+            ];
+
+        foreach (string objPath in requiredPaths)
         {
             List<List<long>> objTransformSeqs = [];
             
