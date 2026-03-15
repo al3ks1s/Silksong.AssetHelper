@@ -54,17 +54,19 @@ public class LargeRequest : MonoBehaviour
         }
     }
 
+    private record RequestedNonSceneAsset(string BundleName, string AssetName, Type Type);
+
     private static void RequestNonSceneAssets(string filename)
     {
         if (!JsonHelper.TryLoadEmbeddedJson(
             filename,
-            out Dictionary<(string bundleName, string assetName), Type>? parsed))
+            out List<RequestedNonSceneAsset>? parsed))
         {
             AssetHelperTestingPlugin.InstanceLogger.LogWarning($"Failed to parse non-scene assets for {filename}");
             return;
         }
 
-        foreach (((string bundleName, string assetName), Type assetType) in parsed)
+        foreach ((string bundleName, string assetName, Type assetType) in parsed)
         {
             AssetRequestAPI.RequestNonSceneAsset(bundleName, assetName, assetType);
         }
