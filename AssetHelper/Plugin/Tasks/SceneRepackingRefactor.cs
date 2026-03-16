@@ -339,8 +339,10 @@ internal class SceneRepackingRefactor : BaseStartupTask
     private bool MustWriteCatalog()
     {
         if (!JsonExtensions.TryLoadFromFile(CatalogMetadataPath, out SceneCatalogMetadata? oldMeta)
-            || oldMeta.SilksongVersion != VersionData.SilksongVersion
-            || !VersionData.EarliestAcceptableSceneRepackVersion.AllowCachedData(oldMeta.PluginVersion)
+            || oldMeta.Metadata == null
+            || oldMeta.Metadata.SilksongVersion != VersionData.SilksongVersion
+            || !VersionData.EarliestAcceptableSceneRepackVersion.AllowCachedData(oldMeta.Metadata.PluginVersion)
+            || oldMeta.Metadata.OSFolderName != AssetPaths.OSFolderName
             )
         {
             return true;
@@ -359,14 +361,25 @@ internal class SceneRepackingRefactor : BaseStartupTask
     /// </summary>
     private static bool MetadataMismatch(string scene, RepackedSceneBundleData existingData)
     {
-        if (!VersionData.EarliestAcceptableSceneRepackVersion.AllowCachedData(existingData.PluginVersion))
+        if (existingData.Metadata == null)
+        {
+            return true;
+        }
+
+        if (!VersionData.EarliestAcceptableSceneRepackVersion.AllowCachedData(existingData.Metadata.PluginVersion))
         {
             // Mismatch: the version of the plugin used to repack needs to be after the last acceptable version.
             // We do not accept versions from the future.
             return true;
         }
 
-        if (existingData.SilksongVersion == VersionData.SilksongVersion)
+        if (existingData.Metadata.OSFolderName != AssetPaths.OSFolderName)
+        {
+            // Different OS strings mean the base game bundles may be different
+            return true;
+        }
+
+        if (existingData.Metadata.SilksongVersion == VersionData.SilksongVersion)
         {
             // If the Silksong version matches, then we're definitely fine.
             return false;

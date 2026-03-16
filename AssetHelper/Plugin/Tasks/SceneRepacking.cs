@@ -163,14 +163,14 @@ internal class SceneRepacking : BaseStartupTask
     /// </summary>
     private static bool MetadataMismatch(string scene, RepackedSceneBundleData existingData)
     {
-        if (!VersionData.EarliestAcceptableSceneRepackVersion.AllowCachedData(existingData.PluginVersion))
+        if (!VersionData.EarliestAcceptableSceneRepackVersion.AllowCachedData(existingData.Metadata.PluginVersion))
         {
             // Mismatch: the version of the plugin used to repack needs to be after the last acceptable version.
             // We do not accept versions from the future.
             return true;
         }
 
-        if (existingData.SilksongVersion == VersionData.SilksongVersion)
+        if (existingData.Metadata.SilksongVersion == VersionData.SilksongVersion)
         {
             // If the Silksong version matches, then we're definitely fine.
             return false;
@@ -284,8 +284,8 @@ internal class SceneRepacking : BaseStartupTask
 
         if (!_didRepack
             && JsonExtensions.TryLoadFromFile(catalogMetadataPath, out SceneCatalogMetadata? oldMeta)
-            && oldMeta.SilksongVersion == VersionData.SilksongVersion
-            && VersionData.EarliestAcceptableSceneRepackVersion.AllowCachedData(oldMeta.PluginVersion)
+            && oldMeta.Metadata.SilksongVersion == VersionData.SilksongVersion
+            && VersionData.EarliestAcceptableSceneRepackVersion.AllowCachedData(oldMeta.Metadata.PluginVersion)
             )
         {
             // We can skip only if there's no change in the repacked bundles and no change to the version metadata

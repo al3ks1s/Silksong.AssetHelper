@@ -10,15 +10,10 @@ namespace Silksong.AssetHelper.Plugin;
 internal sealed class RepackedSceneBundleData
 {
     /// <summary>
-    /// The Silksong version used to create the bundle.
+    /// The metadata when creating the bundle.
     /// </summary>
-    public string SilksongVersion { get; init; } = VersionData.SilksongVersion;
-
-    /// <summary>
-    /// The Asset Helper version used to create the bundle.
-    /// </summary>
-    public string PluginVersion { get; init; } = AssetHelperPlugin.Version;
-
+    public CachedFileMetadata Metadata { get; init; } = CachedFileMetadata.CreateNew();
+    
     /// <summary>
     /// The name of the scene used to generate the bundle.
     /// </summary>

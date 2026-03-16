@@ -16,27 +16,29 @@ internal class CachedObject<T>
     private CachedObject() { }
 
     [JsonProperty]
-    public required string SilksongVersion { get; init; }
-
-    [JsonProperty]
-    public required string PluginVersion { get; init; }
+    public required CachedFileMetadata Metadata { get; init; }
 
     [JsonProperty]
     public required T Value { get; set; }
 
     private bool IsValid()
     {
-        if (SilksongVersion == null || PluginVersion == null)
+        if (Metadata == null || Metadata.SilksongVersion == null || Metadata.PluginVersion == null)
         {
             return false;
         }
 
-        if (VersionData.SilksongVersion != SilksongVersion)
+        if (Metadata.OSFolderName != AssetPaths.OSFolderName)
         {
             return false;
         }
 
-        if (!VersionData.EarliestAcceptableGeneralVersion.AllowCachedData(this.PluginVersion))
+        if (VersionData.SilksongVersion != Metadata.SilksongVersion)
+        {
+            return false;
+        }
+
+        if (!VersionData.EarliestAcceptableGeneralVersion.AllowCachedData(Metadata.PluginVersion))
         {
             return false;
         }
@@ -85,8 +87,7 @@ internal class CachedObject<T>
 
         CachedObject<T> created = new()
         {
-            SilksongVersion = VersionData.SilksongVersion,
-            PluginVersion = AssetHelperPlugin.Version,
+            Metadata = CachedFileMetadata.CreateNew(),
             Value = createDefault(),
         };
         created.SerializeToFile(filePath);
