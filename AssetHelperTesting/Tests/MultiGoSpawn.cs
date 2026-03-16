@@ -29,14 +29,8 @@ public class MultiGoSpawn : MonoBehaviour
     void Awake()
     {
         _groupAsset = ManagedAssetList<GameObject>.FromSceneAsset(sceneName: "Weave_08", objPath: "Group");
-        Md.HeroController.Start.Postfix(DoLoad);
+        Events.OnHeroStart += () => _groupAsset.Load();
     }
-
-    private void DoLoad(HeroController self)
-    {
-        _groupAsset.Load();
-    }
-
 
     void Update()
     {

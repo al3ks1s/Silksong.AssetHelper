@@ -1,3 +1,4 @@
+using AssetHelperTesting;
 using Silksong.AssetHelper.ManagedAssets;
 using System;
 using UnityEngine;
@@ -25,12 +26,7 @@ public class EnemySpawn : MonoBehaviour
             sceneName: "Memory_Coral_Tower",
             objPath: "Battle Scenes/Battle Scene Chamber 2/Wave 1/Coral Hunter");
 
-        Md.HeroController.Start.Postfix(DoLoad);
-    }
-
-    private void DoLoad(HeroController self)
-    {
-        _asset.Load();
+        Events.OnHeroStart += () => _asset.Load();
     }
 
     public static void FixAlita(GameObject obj)

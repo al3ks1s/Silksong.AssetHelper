@@ -3,6 +3,7 @@ using BepInEx;
 using BepInEx.Logging;
 using Silksong.AssetHelper.Dev;
 using Silksong.AssetHelper.Plugin;
+using UnityEngine;
 
 namespace AssetHelperTesting
 {
@@ -28,7 +29,8 @@ namespace AssetHelperTesting
 
         private void PrepareTests()
         {
-            LargeRequest.Prepare();
+            SpawnRequestedChild.Prepare(KeyCode.H);
+            DependentParentTest.Prepare(KeyCode.G);
         }
     }
 }
