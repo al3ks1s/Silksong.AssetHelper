@@ -19,14 +19,14 @@ namespace AssetHelperTesting
 
             PrepareTests();
 
-            // Put your initialization logic here
-            Logger.LogInfo($"Plugin {Name} ({Id}) has loaded!");
-
             AssetRequestAPI.InvokeAfterBundleCreation(
                 () => DebugTools.DumpAllAddressableAssets(AssetRequestAPI.SceneAssetLocator!, "scene_locator.json")
             );
+
+            Logger.LogInfo($"Plugin {Name} ({Id}) has loaded!");
         }
 
+        // Contributors should freely modify this method 
         private void PrepareTests()
         {
             SpawnRequestedChild.Prepare(KeyCode.H);
