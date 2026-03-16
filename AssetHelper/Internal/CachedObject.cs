@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 using Newtonsoft.Json;
 using Silksong.AssetHelper.Core;
@@ -15,7 +16,8 @@ internal class CachedObject<T>
 {
     private CachedObject() { }
 
-    [JsonProperty]
+    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+    [DefaultValue(null)]
     public required CachedFileMetadata Metadata { get; init; }
 
     [JsonProperty]

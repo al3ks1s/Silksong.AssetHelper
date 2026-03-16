@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using Newtonsoft.Json;
 using Silksong.AssetHelper.Internal;
 
@@ -7,6 +8,8 @@ namespace Silksong.AssetHelper.Plugin;
 
 internal class CatalogMetadata
 {
+    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+    [DefaultValue(null)]
     public CachedFileMetadata Metadata { get; set; } = CachedFileMetadata.CreateNew();
 }
 

@@ -1,6 +1,8 @@
 ﻿using AssetHelperLib.Repacking;
+using Newtonsoft.Json;
 using Silksong.AssetHelper.Internal;
 using Silksong.AssetHelper.Plugin.Tasks;
+using System.ComponentModel;
 
 namespace Silksong.AssetHelper.Plugin;
 
@@ -12,6 +14,8 @@ internal sealed class RepackedSceneBundleData
     /// <summary>
     /// The metadata when creating the bundle.
     /// </summary>
+    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+    [DefaultValue(null)]
     public CachedFileMetadata Metadata { get; init; } = CachedFileMetadata.CreateNew();
     
     /// <summary>
