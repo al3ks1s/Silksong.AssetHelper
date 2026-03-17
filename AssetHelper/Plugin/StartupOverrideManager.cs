@@ -35,7 +35,7 @@ internal static class StartupOverrideManager
     [
         new BundleDepsPrecompute(),
         // new SceneRepacking(),
-        new SceneRepackingRefactor(),
+        new SceneRepacking(),
         new NonSceneCatalog(),
     ];
 

@@ -22,7 +22,7 @@ using Silksong.AssetHelper.Dev;
 
 namespace Silksong.AssetHelper.Plugin.Tasks;
 
-internal class SceneRepackingRefactor : BaseStartupTask
+internal class SceneRepacking : BaseStartupTask
 {
     private static string SceneCatalogPath => Path.Combine(AssetPaths.CatalogFolder, $"{CatalogKeys.SceneCatalogId}.bin");
 
