@@ -29,8 +29,7 @@ namespace AssetHelperTesting
         // Contributors should freely modify this method 
         private void PrepareTests()
         {
-            SpawnRequestedChild.Prepare(KeyCode.H);
-            DependentParentTest.Prepare(KeyCode.G);
+            SquirrmTest.Prepare();
         }
     }
 }
