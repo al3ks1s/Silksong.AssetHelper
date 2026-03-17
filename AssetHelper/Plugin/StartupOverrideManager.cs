@@ -34,7 +34,6 @@ internal static class StartupOverrideManager
     private static List<BaseStartupTask> _tasks =
     [
         new BundleDepsPrecompute(),
-        // new SceneRepacking(),
         new SceneRepacking(),
         new NonSceneCatalog(),
     ];
