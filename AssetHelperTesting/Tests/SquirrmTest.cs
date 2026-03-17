@@ -28,8 +28,6 @@ internal class SquirrmTest : MonoBehaviour
         _asset = ManagedAsset<GameObject>.FromSceneAsset(
             sceneName: "Coral_36",
             objPath: "Judge Child (1)");
-
-        Events.OnHeroStart += () => _asset.Load();
     }
 
     void Update()
