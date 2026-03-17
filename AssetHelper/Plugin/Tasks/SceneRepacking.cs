@@ -125,6 +125,7 @@ internal class SceneRepacking : BaseStartupTask
             {
                 loadingScreen.Reset();
                 loadingScreen.SetText(LanguageKeys.BULDING_SCENE.GetLocalized());
+                yield return null;
 
                 AssetHelperPlugin.InstanceLogger.LogInfo($"Creating catalog");
                 Stopwatch sw = Stopwatch.StartNew();
