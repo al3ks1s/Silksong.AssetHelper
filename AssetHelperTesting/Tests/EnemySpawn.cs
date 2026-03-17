@@ -29,6 +29,7 @@ public class EnemySpawn : MonoBehaviour
         Events.OnHeroStart += () => _asset.Load();
     }
 
+    // Code lifted from https://github.com/cometcake575/Architect-Silksong/blob/main/Behaviour/Fixers/EnemyFixers.cs
     public static void FixAlita(GameObject obj)
     {
         PlayMakerFSM fsm = obj.LocateMyFSM("Control");

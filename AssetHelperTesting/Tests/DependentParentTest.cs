@@ -37,6 +37,7 @@ public class DependentParentTest : MonoBehaviour
         _asset.Load();
     }
 
+    // Code lifted from https://github.com/cometcake575/Architect-Silksong/blob/main/Behaviour/Fixers/EnemyFixers.cs
     public static void FixMossMother(GameObject obj)
     {
         PlayMakerFSM fsm = obj.LocateMyFSM("Control");
