@@ -11,6 +11,7 @@ public static class ManagedAssetExtensions
     /// <summary>
     /// Instantiate the asset managed by this instance.
     /// </summary>
+    /// <exception cref="InvalidOperationException">If the asset has not finished loading.</exception>
     public static T InstantiateAsset<T>(this ManagedAsset<T> asset)
         where T : UObject
     {
@@ -87,7 +88,8 @@ public static class ManagedAssetExtensions
     /// this will inspect the children or components of the given asset.
     /// This function should not mutate the argument.</param>
     /// <returns></returns>
-    /// <exception cref="InvalidOperationException">If none of the assets match the predicate.</exception>
+    /// <exception cref="InvalidOperationException">If the asset has not finished loading.</exception>
+    /// <exception cref="ArgumentException">If none of the assets match the predicate.</exception>
     public static T InstantiateAsset<T>(this ManagedAssetList<T> asset, Func<T, bool> predicate) where T : UObject
     {
         if (!asset.IsLoaded)
@@ -103,6 +105,6 @@ public static class ManagedAssetExtensions
             }
         }
 
-        throw new InvalidOperationException($"No matching asset for managed asset list with key {asset.Key} was found!");
+        throw new ArgumentException($"No matching asset for managed asset list with key {asset.Key} was found!");
     }
 }
