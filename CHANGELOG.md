@@ -1,3 +1,10 @@
+### v1.3.0
+
+Add proper support for game objects which have the same name as
+other game objects
+
+Add scene selector to menu
+
 ### v1.2.1
 
 Fix bugs when different mods request assets from the same scene
