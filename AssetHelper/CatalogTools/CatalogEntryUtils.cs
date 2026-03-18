@@ -56,7 +56,7 @@ internal static class CatalogEntryUtils
         return bundleEntry;
     }
 
-    /// <inheritdoc cref="CreateAssetEntry(string, Type, List{string}, out string)" />
+    /// <inheritdoc cref="CreateAssetEntry(string, Type, List{string}, List{string})" />
     public static ContentCatalogDataEntry CreateAssetEntry(
         string internalId,
         Type assetType,
@@ -66,7 +66,7 @@ internal static class CatalogEntryUtils
     {
         primaryKey = internalId;
 
-        return CreateAssetEntry(internalId, assetType, dependencyKeys, primaryKey);
+        return CreateAssetEntry(internalId, assetType, dependencyKeys, [primaryKey]);
     }
 
     /// <summary>
@@ -75,33 +75,28 @@ internal static class CatalogEntryUtils
     /// <param name="internalId">The internal ID of the asset. This is the name of the asset within the bundle.</param>
     /// <param name="assetType">Unity type of the asset. Eg: GameObject</param>
     /// <param name="dependencyKeys">Primary keys of the bundle dependencies. These should be in the catalog.</param>
-    /// <param name="primaryKey">The primary key used to access the asset with Addressables.</param>
+    /// <param name="primaryKeys">The primary keys used to access the asset with Addressables.</param>
     public static ContentCatalogDataEntry CreateAssetEntry(
         string internalId,
         Type assetType,
         List<string> dependencyKeys,
-        string primaryKey
+        List<string> primaryKeys
     )
     {
         object[] deps = dependencyKeys.Cast<object>().ToArray();
+        object[] pkeys = primaryKeys.Cast<object>().ToArray(); 
 
         return new ContentCatalogDataEntry(
             assetType,
             internalId,
             "UnityEngine.ResourceManagement.ResourceProviders.BundledAssetProvider",
-            new object[] { primaryKey },
+            pkeys,
             deps,
             null
         );
     }
 
-    /// <summary>
-    /// Create a catalog entry representing a child gameobject of
-    /// the gameObject loaded by parentPrimaryKey.
-    /// </summary>
-    /// <param name="parentPrimaryKey">The primary key of the parent.</param>
-    /// <param name="relativePath">The path of the child relative to the parent, with no leading slash.</param>
-    /// <param name="primaryKey">The primary key of the added entry.</param>
+    /// <inheritdoc cref="CreateChildGameObjectEntry(string, string, List{string})" />
     public static ContentCatalogDataEntry CreateChildGameObjectEntry(
         string parentPrimaryKey,
         string relativePath,
@@ -128,30 +123,37 @@ internal static class CatalogEntryUtils
             primaryKey = $"{parentPrimaryKey}/{relativePath}";
         }
 
-        return CreateChildGameObjectEntry(parentPrimaryKey, relativePath, primaryKey);
+        return CreateChildGameObjectEntry(parentPrimaryKey, relativePath, [primaryKey]);
     }
 
-    /// <inheritdoc cref="CreateChildGameObjectEntry(string, string, out string)" />
+    /// <summary>
+    /// Create a catalog entry representing a child gameobject of
+    /// the gameObject loaded by parentPrimaryKey.
+    /// </summary>
+    /// <param name="parentPrimaryKey">The primary key of the parent.</param>
+    /// <param name="relativePath">The path of the child relative to the parent, with no leading slash.</param>
+    /// <param name="primaryKeys">The primary keys of the added entry.</param>
     public static ContentCatalogDataEntry CreateChildGameObjectEntry(
         string parentPrimaryKey,
         string relativePath,
-        string primaryKey
+        List<string> primaryKeys
     )
     {
         object[] deps = new object[] { parentPrimaryKey };
+        object[] pkeys = primaryKeys.Cast<object>().ToArray();
 
         return new ContentCatalogDataEntry(
             typeof(GameObject),
             // Put the parent primary key to ensure the internal ID is unique
             $"{relativePath}/{ChildGameObjectProvider.InternalIdSeparator}/{parentPrimaryKey}",
             ChildGameObjectProvider.ClassProviderId,
-            new object[] { primaryKey },
+            pkeys,
             deps,
             null
         );
     }
 
-    /// <inheritdoc cref="CreateEntryFromLocation(IResourceLocation, string)" />
+    /// <inheritdoc cref="CreateEntryFromLocation(IResourceLocation, List{string})" />
     public static ContentCatalogDataEntry CreateEntryFromLocation(
         IResourceLocation location,
         out string primaryKey
@@ -159,25 +161,27 @@ internal static class CatalogEntryUtils
     {
         primaryKey = $"{nameof(AssetHelper)}:{location.PrimaryKey}";
 
-        return CreateEntryFromLocation(location, primaryKey);
+        return CreateEntryFromLocation(location, [primaryKey]);
     }
 
     /// <summary>
     /// Create a catalog entry based on the given location.
     /// </summary>
     /// <param name="location">The location.</param>
-    /// <param name="primaryKey">The primary key for the new catalog entry.</param>
+    /// <param name="primaryKeys">The primary keys for the new catalog entry.</param>
     /// <returns></returns>
     public static ContentCatalogDataEntry CreateEntryFromLocation(
         IResourceLocation location,
-        string primaryKey
+        List<string> primaryKeys
     )
     {
+        object[] pkeys = primaryKeys.Cast<object>().ToArray();
+
         return new ContentCatalogDataEntry(
             location.ResourceType,
             location.InternalId,
             location.ProviderId,
-            new object[] { primaryKey },
+            pkeys,
             null,
             location.Data
         );

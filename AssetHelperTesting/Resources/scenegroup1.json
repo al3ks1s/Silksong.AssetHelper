@@ -1,0 +1,882 @@
+{
+    "arborium_09": [
+        "_Managers",
+        "_SceneManager",
+        "TileMap",
+        "MossBone Crawler (1)",
+        "MossBone Crawler Fat"
+    ],
+    "tut_02": [
+        "bone_plat_01",
+        "bone_plat_02",
+        "Tiny Dragonfly (3)",
+        "green_grass_tri (6)/Green Grass A"
+    ],
+    "bonetown_boss": [
+        "Boss Scene/Boulders Battle",
+        "Boss Scene/Skull King"
+    ],
+    "slab_16b": [
+        "Broodmother Scene Control/Broodmother Scene/Battle Scene Broodmother/Spawner Flies",
+        "Broodmother Scene Control/Broodmother Scene/Battle Scene Broodmother/Spawner Flies/Slab Fly Small Fresh",
+        "Broodmother Scene Control/Broodmother Scene/Battle Scene Broodmother/Wave 4/Slab Fly Broodmother"
+    ],
+    "cog_dancers_boss": [
+        "Dancer Control/Death Chunks 1"
+    ],
+    "slab_10b": [
+        "Boss Scene/Pin Projectiles",
+        "Boss Scene/Loose Pins",
+        "Boss Scene/Blasts",
+        "Boss Scene/First Weaver"
+    ],
+    "shellwood_22": [
+        "Boss Scene/Pt Shield Trail"
+    ],
+    "library_13": [
+        "Grand Stage Scene/Boss Scene Trobbio/Flare Glitter",
+        "Grand Stage Scene/Boss Scene Trobbio/Floor Tiles",
+        "Grand Stage Scene/Boss Scene Trobbio/Trapdoor Bursts",
+        "Grand Stage Scene/Boss Scene TormentedTrobbio/Flare Glitter",
+        "Grand Stage Scene/Boss Scene TormentedTrobbio/Floor Tiles",
+        "Grand Stage Scene/Boss Scene TormentedTrobbio/Trapdoor Bursts",
+        "Grand Stage Scene/Boss Scene Trobbio/Trobbio",
+        "Grand Stage Scene/Boss Scene TormentedTrobbio/Tormented Trobbio"
+    ],
+    "coral_36": [
+        "Judge Children Sing Trigger",
+        "Judge Children Trigger",
+        "Judge Child (1)"
+    ],
+    "shellwood_18": [
+        "Boss Scene Parent/Boss Scene/Spikes"
+    ],
+    "memory_coral_tower": [
+        "Boss Scene/Long Spear",
+        "Boss Scene/Air Spear",
+        "Boss Scene/Uppercut Spear",
+        "Boss Scene/Roar Spikes",
+        "Boss Scene/Cross Spears",
+        "Boss Scene/Cross Followup Spears",
+        "Boss Scene/Shoot Spikes",
+        "Battle Scenes/Battle Scene Chamber 2/Wave 9/Coral Conch Driller",
+        "Enemy Activator Groups/Enemy Activator Low/Enemy Folder/Coral Goomba M (2)",
+        "Enemy Activator Groups/Enemy Activator Low/Enemy Folder/Coral Goomba L",
+        "Battle Scenes/Battle Scene Chamber 3/Wave 5 - fish1/Coral Swimmer Fat (1)",
+        "Battle Scenes/Battle Scene Chamber 3/Wave 5 - fish1/Coral Poke Swimmer",
+        "Battle Scenes/Battle Scene Chamber 2/Wave 7b - Fish/Coral Spike Swimmer (1)",
+        "Battle Scenes/Battle Scene Chamber 2/Wave 2/Coral Warrior (1)",
+        "Battle Scenes/Battle Scene Chamber 4/Wave 3/Coral Bubble Brute",
+        "Battle Scenes/Battle Scene Chamber 2/Wave 10/Coral Brawler (1)",
+        "Battle Scenes/Battle Scene Chamber 2/Wave 1/Coral Hunter",
+        "Enemy Activator Groups/Enemy Activator Low/Enemy Folder/Coral Swimmer Small",
+        "Battle Scenes/Battle Scene Chamber 3/Wave 15b - double jellyfish/Coral Big Jellyfish",
+        "Battle Scenes/Battle Scene Chamber 1/Wave 5/Coral Flyer",
+        "Battle Scenes/Battle Scene Chamber 3/Wave 2b/Coral Flyer Throw",
+        "Battle Scenes/Battle Scene Chamber 2/Wave 10/Coral Brawler (1)/Stomp Spire L",
+        "Boss Scene/Roar Spikes/Spike Holder 1/Coral Spike",
+        "Boss Scene/Coral King",
+        "Fish/Pt Exit"
+    ],
+    "memory_ant_queen": [
+        "Boss Scene/Grind Spikes R",
+        "Boss Scene/Grind Spikes L",
+        "Boss Scene/Battle Scene/Wave 4/Bone Hunter Fly Chief",
+        "Boss Scene/Hunter Queen Boss"
+    ],
+    "bone_east_08": [
+        "Boss Scene/Lava Plats",
+        "Boss Scene/Lava Rocks",
+        "Boss Scene/Pre Activation Floor/Song Golem Floor (8)"
+    ],
+    "cog_04": [
+        "Spike Cog collider Round/Cog Damager",
+        "cog_rail_hazard (9)/cog",
+        "Spike_cog_set_core (5)/Spike Cog 2",
+        "Spike_cog_set_core (5)/Spike Cog 3 (1)",
+        "cog_lever",
+        "Black Thread States Thread Only Variant/Normal World/Song Automaton 01",
+        "Black Thread States Thread Only Variant/Black Thread World/Group (1)/Song Automaton 02",
+        "Song Automaton Goomba",
+        "cog_plat_float_tiny (1)",
+        "cog_plat_float (2)"
+    ],
+    "under_06": [
+        "junk_chute_ manual (1)",
+        "Grind Plat Control/Understore Grind Plat (1)",
+        "understore_junk_pipe"
+    ],
+    "bone_east_09": [
+        "Lava Box",
+        "lava_set/LavaBase (1)"
+    ],
+    "abyss_07": [
+        "Abyss Tendril Hero Damager",
+        "Abyss Tendrils (16)"
+    ],
+    "coral_11": [
+        "Sand Centipede Hero Damager",
+        "Sand Centipede Attacker (10)"
+    ],
+    "bone_east_03": [
+        "Coal Region",
+        "Black Thread States Thread Only Variant/Normal World/Bone Goomba",
+        "Black Thread States Thread Only Variant/Normal World/Bone Goomba Large",
+        "bone_goomba_skull_break",
+        "bone_goomba_skull_break_large)",
+        "Black Thread States Thread Only Variant/Normal World/Hunting PreScene/Bone Circler",
+        "Black Thread States Thread Only Variant/Black Thread World/Bone Circler Vicious (1)",
+        "Black Thread States Thread Only Variant/Normal World/Bone_Boulder",
+        "bone_plat_02 (2)",
+        "bone_plat_03 (2)",
+        "bone_plat_03 (6)",
+        "Dock Worker",
+        "lava_rocks_top_glower"
+    ],
+    "cradle_03": [
+        "cradle_spike_plat (10)",
+        "Boss Scene/Rubble Fields/Rubble Field M",
+        "cradle_plat (7)",
+        "cradle_spike_plat (10)/art/Cradle__0004_moving_plat (9)"
+    ],
+    "coral_29": [
+        "Zap Hazard Parent",
+        "Zap Worm Lightning (2)",
+        "Boss Scene/Zap Clusters/Cluster 1/Mega Jelly Zap",
+        "coral_zap_mounds_shortest (10)"
+    ],
+    "belltown": [
+        "Town States/Spinner Defeated/Quest Board Pivot/Quest_Board",
+        "hanging_bell_house 2/plat_float_07",
+        "Hornet House States/Full/plat_float_07 (1)",
+        "Black Thread States Thread Only Variant/Normal World/shop_sign",
+        "Pin Pilgrim",
+        "Town States/Spinner Defeated/Bagpipers Not Here/Belltown Greeter Act3",
+        "BlurPlane"
+    ],
+    "arborium_04": [
+        "MossBone Fly (1)",
+        "Enemy Respawner/Source Folder/Bone Thumper"
+    ],
+    "tut_03": [
+        "Black Thread States/Normal World/Battle Scene/Wave 1/Mossbone Mother"
+    ],
+    "mosstown_01": [
+        "Black Thread States Thread Only Variant/Black Thread World/Aspid Collector",
+        "Black Thread States Thread Only Variant/Normal World/Pilgrim Moss Spitter",
+        "Pilgrim 03 (1)",
+        "Pilgrim 01",
+        "Bone Lever"
+    ],
+    "greymoor_13": [
+        "Pilgrim 03/Drop Dust",
+        "Black Thread States Thread Only Variant/Normal World/Pilgrim BellThrower",
+        "Black Thread States Thread Only Variant/Black Thread World/Pilgrim Bellthrower Fly"
+    ],
+    "bone_east_14b": [
+        "Pilgrim 04",
+        "Pilgrim 02 (1)"
+    ],
+    "coral_32": [
+        "Black Thread States/Black Thread World/Black_Thread_Core/Enemy Group/Pilgrim Fly",
+        "Black Thread States/Black Thread World/Black_Thread_Core/Enemy Group/Pilgrim Hiker",
+        "shell_plat_hang_bell (4)",
+        "Black Thread States/Normal World/Coral Judge (3)",
+        "fossil_judge_break_leanRight",
+        "blown_sand_tiled_set",
+        "Coral Conch Shooter (1)"
+    ],
+    "bonegrave": [
+        "Pilgrim Groups/Group 1/Act3 Pilgrim 05",
+        "Pilgrim Groups/Group 2/Pilgrim StaffWielder",
+        "Pilgrim Groups/Rosary Pilgrim Scene/Rosary Pilgrim",
+        "Pilgrim Groups/Rosary Pilgrim Scene/Geo Small Persistent (4)"
+    ],
+    "mosstown_02": [
+        "Pilgrim Trap Wire",
+        "traps_left/Pilgrim Trap Spike",
+        "Black Thread States Thread Only Variant/Normal World/Thick Silk Vines"
+    ],
+    "bonetown": [
+        "Black Thread States/Normal World/Bonetown Resident",
+        "Black Thread States/Normal World/RestBench Control/Bench Getting Repaired/Fixer Pilgrim Bench Repair",
+        "Black Thread States/Normal World/fixer_constructs/fixer_statue/Shell Shard Fossil Big",
+        "rosary_shrine_small",
+        "Black Thread States/Black Thread World/Thief Scene/Rosary Thief Group/Rosary Thief"
+    ],
+    "weave_05b": [
+        "Bone Goomba Bounce Fly (11)"
+    ],
+    "ant_19": [
+        "Bone Crawler (2)",
+        "Enemy Break Cage (9)/Enemy/Bone Flyer",
+        "Boss Control/Boss Scene/Bone Flyer Giant",
+        "Updraft Region (1)"
+    ],
+    "arborium_03": [
+        "Bone Roller",
+        "Flower Drifter (3)",
+        "Flower Drifter (4)/pollen_flare_attack",
+        "Bloom Shooter",
+        "hanging_gardens_plat_float_metal_small (3)",
+        "Arborium Plat Mid",
+        "Arborium Keeper"
+    ],
+    "bone_east_lavachallenge": [
+        "Bone Spitter",
+        "bone_plat_01_crumble_small (2)",
+        "bone_plat_01_crumble (2)",
+        "bone_plat_02_crumble (1)",
+        "bone_plat_crumble_tall (4)",
+        "Heart Piece (1)"
+    ],
+    "bone_06": [
+        "Rock Roller Scene/Rock Roller",
+        "Shell Fossil Mimic AppearVariant"
+    ],
+    "chapel_wanderer": [
+        "Battle Scene/Gates/Battle Gate Bone"
+    ],
+    "bone_east_01": [
+        "Black Thread States Thread Only Variant/Normal World/Dock Flyer",
+        "dock_plat_float_01 (1)",
+        "dock_plat_float_01 (9)"
+    ],
+    "dock_02": [
+        "Tar Slug",
+        "Dock Bomber",
+        "Shield Dockworker Spawn/Shield Dockworker (2)"
+    ],
+    "dock_11": [
+        "Tar Slug Huge (1)"
+    ],
+    "dock_02b": [
+        "Dock Charger",
+        "lava_crumble_plat (5)"
+    ],
+    "bone_east_15": [
+        "Song_Gate_small (3)",
+        "Song_lever_side",
+        "fung_plat_float_06",
+        "Fields Flock Flyer",
+        "Fields Goomba",
+        "Fields Flyer",
+        "bell_bench",
+        "bell_bench/RestBench",
+        "bell_bench/Enviro Region Simple"
+    ],
+    "under_19": [
+        "Lava_Waterfall Set (4)",
+        "lava_crumble_plat",
+        "Understore Automaton",
+        "Understore Automaton EX (9)",
+        "Pilgrim Staff Understore",
+        "Pilgrim 03 Understore (1)"
+    ],
+    "dock_09": [
+        "Boss Scene/Dock Guard Slasher",
+        "Boss Scene/Dock Guard Thrower"
+    ],
+    "room_forge": [
+        "_NPCs/Forge Daughter"
+    ],
+    "bone_east_14": [
+        "bone_plat_03",
+        "Explode Floor Scene/DropBomb Rock (2)",
+        "Spine Floater (9)",
+        "explode_wall (4)"
+    ],
+    "bone_east_24": [
+        "Bone Hopper Group/Bone Hopper Simple",
+        "Bone Hopper Group/Bone Hopper Giant",
+        "Ant Trapper Quest Scene (3)/Tracking Scene/Trapper Barb Trap Landmine"
+    ],
+    "bone_east_10_church": [
+        "Rhino Scene/Rhino",
+        "Black Thread States Thread Only Variant/Normal World/Flea Rescue Sleeping"
+    ],
+    "bone_east_08_boss_golem": [
+        "Boss Scene"
+    ],
+    "crawl_04": [
+        "Little Crabs/Crabs/Small Crab",
+        "Roof Crab"
+    ],
+    "crawl_01": [
+        "Crypt Worms/GameObject/Crypt Worm (9)",
+        "Bone Worm Nests/Worm Pool/Bone Worm (2)"
+    ],
+    "crawl_03": [
+        "Area_States/Infected/Bone Worm BlueBlood (1)",
+        "Area_States/Infected/Bone Worm BlueTurret",
+        "PUSTULE_States/Active/pustule_set_small (1)/PUSTULE",
+        "bone_plat_02 (4)"
+    ],
+    "crawl_10": [
+        "Area_States/Infected/Blue Assistant"
+    ],
+    "crawl_09": [
+        "Area_States/Infected/Health Cocoon"
+    ],
+    "crawl_05": [
+        "Group/bone_plat_01 (3)",
+        "Crest_shrine_corner_plat (2)"
+    ],
+    "ant_04": [
+        "Black Thread States Thread Only Variant/Normal World/Bone Hunter Tiny",
+        "Black Thread States Thread Only Variant/Normal World/Bone Hunter Buzzer",
+        "Black Thread States Thread Only Variant/Normal World/Bone Hunter Child",
+        "Black Thread States Thread Only Variant/Normal World/Bone Hunter",
+        "White Palace Fly",
+        "Hunter Sickle Trap",
+        "Hunter Trap Plate",
+        "Silkcatcher Plant"
+    ],
+    "ant_21": [
+        "Enemy Control/Ant Merchant Killed/Big Guard Dead/Bone Hunter Fly",
+        "Enemy Control/Normal/Bone Hunter Throw",
+        "ant_rosary_string",
+        "ant_rosary_string_medium (1)",
+        "ant_rosary_string_large"
+    ],
+    "ant_09": [
+        "Fields Harpoon Ring Pole"
+    ],
+    "greymoor_06": [
+        "Farmer Scissors",
+        "Mite",
+        "Greymoor_windmill_cog (1)/GameObject/dustpen_trap_shine0000"
+    ],
+    "greymoor_05": [
+        "Scene Control/Farmer Enemies/Roosting Enemies/Farmer Catcher (2)",
+        "Scene Control/Farmer Enemies/Farmer Centipede (1)"
+    ],
+    "greymoor_16": [
+        "Gnat Giant"
+    ],
+    "greymoor_03": [
+        "Mitefly (1)",
+        "Weathervane States/Post Quest/Scarecraw",
+        "greymoor_balloon_small (2)",
+        "greymoor_balloon_mid (1)",
+        "greymoor_balloon_large",
+        "Black Thread States Thread Only Variant/Normal World/Strut Structure/Tilt Plat",
+        "break_grey_lamp_dual_twist (1)"
+    ],
+    "greymoor_15b": [
+        "Crowman",
+        "Crowman Dagger (1)"
+    ],
+    "room_crowcourt_02": [
+        "Battle Scene/Wave 2/Crowman Juror Tiny",
+        "Battle Scene/Wave 1/Crowman Juror",
+        "Battle Scene/Wave 1/Crowman Dagger Juror",
+        "Battle Scene/Wave 6/Crawfather",
+        "Battle Scene/Wave 6/Crawfather/Chains/Crawfather Attack Chain"
+    ],
+    "greymoor_05_boss": [
+        "Vampire Gnat Boss Scene/Vampire Gnat"
+    ],
+    "greymoor_07": [
+        "grey_lever_gate (1)",
+        "Greymoor_Rain_Tiled_Set"
+    ],
+    "dust_05": [
+        "Dustroach",
+        "Roachkeeper"
+    ],
+    "dust_02": [
+        "Roachfeeder Short",
+        "Black Thread States Thread Only Variant/Normal World/Roachfeeder Tall",
+        "greymoor_flip_bridge (1)"
+    ],
+    "dust_chef": [
+        "Battle Parent/Kitchen Pipe Gong/kitchen_string_offset/kitchen_string",
+        "Battle Parent/Battle Scene/Wave 1/Roachkeeper Chef Tiny",
+        "Battle Parent/Battle Scene/Wave 2/Roachkeeper Chef (1)"
+    ],
+    "dust_11": [
+        "Steel Soul States/Regular/NPC Control/Large Cocoon 1"
+    ],
+    "sprintmaster_cave": [
+        "Race Group/Tracks/Track 2/Sprintmaster Bounce Pod (4)"
+    ],
+    "wisp_02": [
+        "Wisp Bounce Pod",
+        "Wisp Farmers/Wisp Flame Lantern",
+        "Wisp Farmers/Farmer Wisp"
+    ],
+    "belltown_basement_03": [
+        "Bell Goomba",
+        "Bell Fly",
+        "rosary_cache_bell_ground"
+    ],
+    "belltown_04": [
+        "Drop Bell (1)"
+    ],
+    "shellwood_01": [
+        "shellwood_plat_float_thin",
+        "shellwood_plat_float_wide",
+        "Black Thread States/Normal World/Pilgrim Fisher Enemy (1)",
+        "Shellwood Goomba",
+        "Shellwood Goomba Flyer (1)",
+        "Black Thread States/Black Thread World/Shakra Guard Scene/Scene Folder/Mapper StandGuard NPC"
+    ],
+    "arborium_05": [
+        "Shellwood Bounce Bloom",
+        "Pond Skater",
+        "Bloom Puncher"
+    ],
+    "shellwood_10": [
+        "weaver_harp_sign",
+        "Flower Drifter",
+        "pollen_particles (1)",
+        "Ability Scene (1)/Shrine Weaver Ability"
+    ],
+    "shellwood_02": [
+        "Shellwood Wasp",
+        "Stick Insect",
+        "Stick Insect Charger"
+    ],
+    "shellwood_26": [
+        "Black Thread States/Normal World/Stick Insect Flyer (1)"
+    ],
+    "belltown_room_shellwood": [
+        "shell_hang_rope"
+    ],
+    "coral_34": [
+        "Harpoon Ring Pinstress Rope (4)"
+    ],
+    "song_20b": [
+        "sc_plat_hang_bell (5)",
+        "Dial Door Bridge"
+    ],
+    "coral_judge_arena": [
+        "Boss Scene/Last Judge"
+    ],
+    "coral_37": [
+        "Room_States/Steel/Steel Sentinel"
+    ],
+    "coral_24": [
+        "Coral Spike Goomba",
+        "Coral Conch Shooter Heavy (1)",
+        "Coral Conch Stabber (1)",
+        "coral_crust_tree (5)/Coral Crust Tree Activator",
+        "coral_crust_tree (5)/Interactive Activate Parent/Branch 1/Coral Crust Tree Spike Red",
+        "coral_crust_tree (10)/Interactive Activate Parent/Branch 1/Coral Crust Tree Spike Grey",
+        "coral_crust_tree (5)/Interactive Activate Parent/Branch 1/Coral Crust Tree Plat Small Grey",
+        "coral_crust_tree (7)/Interactive Activate Parent/Branch 1/Coral Crust Tree Plat Small Red",
+        "coral_crust_tree (5)/Interactive Activate Parent/Branch 1/Coral Crust Tree Plat Mid Red",
+        "Coral_plat_float_green_medium (1)"
+    ],
+    "arborium_06": [
+        "Coral Goomba Large (1)",
+        "Coral Crust Wall Small",
+        "Coral Crust Wall Mid (1)",
+        "Coral Crust Wall Tall (3)"
+    ],
+    "coral_39": [
+        "Coral Warrior Grey"
+    ],
+    "coral_tower_01": [
+        "Coral_Warrior_break"
+    ],
+    "arborium_08": [
+        "Giant Flea Scene/Giant Flea"
+    ],
+    "arborium_02": [
+        "ant_tiny_white_bug_swarm"
+    ],
+    "under_03": [
+        "fan_hazard"
+    ],
+    "cog_09": [
+        "puzzle cylinders/Cog_Choir_Cylinder/Anim Offset/Cog 1/puzzle cog lever"
+    ],
+    "cog_06": [
+        "Song Automaton Shield"
+    ],
+    "cog_05": [
+        "Battle Scene/Wave 2/Song Automaton Fly Spike"
+    ],
+    "cog_07": [
+        "Black Thread States/Normal World/Song Automaton Fly (3)",
+        "Black Thread States/Normal World/Repairable Scene/Song Automaton Ball (1)"
+    ],
+    "under_17": [
+        "Architect Scene/Chair/pillar E/pillar D/pillar C/pillar B/pillar A/seat/Architect NPC"
+    ],
+    "under_19b": [
+        "Understore Thrower"
+    ],
+    "under_10": [
+        "Battle Scene/Wave 1/Understore Small",
+        "Battle Scene/Wave 2/Understore Poker",
+        "Battle Scene/Wave 6/Understore Heavy (1)"
+    ],
+    "slab_15": [
+        "Mite Heavy (1)",
+        "Slab Prisoner Leaper New",
+        "Slab Prisoner Fly New"
+    ],
+    "hang_10": [
+        "Understore Mite Giant",
+        "Citadel Bat"
+    ],
+    "arborium_11": [
+        "Merchant Quest Parent/Quest Active/Battle Scene/Wave 1/Citadel Bat Large"
+    ],
+    "under_07": [
+        "steam_vent_short (3)",
+        "Battle Scene/Gates/steam_vent_short (2)"
+    ],
+    "under_05": [
+        "cog_05_shortcut/before/blocking cogs/Spike Cog 3",
+        "cog_05_shortcut/before/blocking cogs/Spike Cog 2",
+        "dock_metal_grate_floor_set (1)"
+    ],
+    "under_03d": [
+        "Black Thread States/Normal World/Understore Large Worker"
+    ],
+    "library_04": [
+        "Acolyte Control/Song Scholar Acolyte",
+        "Black Thread States/Normal World/Lightbearer (3)",
+        "Black Thread States/Normal World/Scrollkeeper",
+        "Scholar",
+        "library_lamp_stand (1)",
+        "library_lamp_wall (2)"
+    ],
+    "song_11": [
+        "Black Thread States Thread Only Variant/Normal World/Pilgrim 01 Song",
+        "Pilgrim 02 Song",
+        "Pilgrim 04 Song (2)",
+        "Pilgrim Stomper Song",
+        "metronome_plat (11)",
+        "sc_plat_float_mid (5)"
+    ],
+    "song_17": [
+        "March Group Control/March Group R/Song Pilgrim 01",
+        "Garmond Fight Scene/Garmond Fighter"
+    ],
+    "hang_04_boss": [
+        "Battle Scene/Wave 3/Pilgrim 03 Song",
+        "Battle Scene/Wave 8 - Heavy Sentry/Song Heavy Sentry",
+        "Battle Scene/Wave 5 - Song Admins/Song Administrator",
+        "Battle Scene/Wave 13 - Maestro/Song Pilgrim Maestro",
+        "Battle Scene/Wave 1/Song Reed"
+    ],
+    "hang_07": [
+        "Black Thread States/Normal World/Unscaler/Song Reed Grand (1)"
+    ],
+    "song_25": [
+        "Black Thread States/Normal World/Song Reed Grand (2)/grand_reed_spell_sphere",
+        "Song Knight Control/Song Knight Present/Song Knight BattleEncounter"
+    ],
+    "song_09": [
+        "Hornet_pressure_plate_small_persistent",
+        "Citadel Switch Gate"
+    ],
+    "coral_10": [
+        "Hornet_pressure_plate/Plate",
+        "Song Gate Entrance Right",
+        "Seth Stand NPC",
+        "Black Thread States/Normal World/Hornet_way_pole_harp (9)"
+    ],
+    "song_enclave": [
+        "sc_plat_float_fat",
+        "Black Thread States/Normal World/Enclave States/States/Level 1/Enclave Simple NPC Tall",
+        "Black Thread States/Normal World/Enclave States/States/Level 1/Enclave Caretaker",
+        "Black Thread States/Normal World/Enclave States/States/Level 2/Sherma Enclave NPC",
+        "Black Thread States/Black Thread World/Enclave Act 3/Sherma Caretaker"
+    ],
+    "song_12": [
+        "Black Thread States/Normal World/sc_plat_float_fat (1)"
+    ],
+    "song_01": [
+        "sc_plat_float_tall"
+    ],
+    "cog_dancers": [
+        "Black Thread States/Normal World/harpoon_ring_gate"
+    ],
+    "ward_09": [
+        "Sherma Rescue Scene/Activation Folder/Battle Scene/Wave 1/Song Pilgrim 02"
+    ],
+    "ward_03": [
+        "Song Creeper (2)",
+        "brk_barrel_03_opencoal"
+    ],
+    "ward_02": [
+        "Boss Scene Parent/Respawn Scene/Husks/Slasher 1",
+        "Boss Scene Parent/Respawn Scene/Husks/Slammer 1",
+        "Boss Scene Parent/Silk Heart"
+    ],
+    "bone_11b": [
+        "Silk Spool"
+    ],
+    "slab_05": [
+        "Slab Fly Small",
+        "spike_trap_slab_jail/pressure_plate",
+        "Jail Gate Door (2)"
+    ],
+    "slab_04": [
+        "Slab Fly Mid (2)"
+    ],
+    "slab_22": [
+        "Slab Fly Large",
+        "slab_jail_lever"
+    ],
+    "bone_east_04c": [
+        "Scene Control/Slab Jailer Scene/Slab Fly Large Cage"
+    ],
+    "slab_21": [
+        "slab_spike_ball",
+        "trap_spinning_blade_S_bend_slab_jail (4)/prop_blade"
+    ],
+    "peak_06": [
+        "Crystal Drifter",
+        "Crystal Drifter Giant",
+        "Float Crystal (13)"
+    ],
+    "peak_05": [
+        "Peaks Drifter",
+        "chair_lift_ring/Harpoon Ring Citadel",
+        "weaver_heat_lamp (2)/Lamp",
+        "coal_lantern_jail_wall_mount/string_cap",
+        "Slide Surface (2)",
+        "peak_storm_set_mid_strength"
+    ],
+    "hang_08": [
+        "Harpoon Ring VerticalRide"
+    ],
+    "cog_08": [
+        "Harpoon Ring Rail Slider"
+    ],
+    "bellway_peak_02": [
+        "Snowflake Chunk (82)",
+        "weaver lamp_roof heat large"
+    ],
+    "peak_mask_maker": [
+        "Peak Mask Maker"
+    ],
+    "peak_08b": [
+        "DJ Get Sequence/Fayforn Ground Sit NPC"
+    ],
+    "shadow_02": [
+        "Bloat Roach",
+        "Black Thread States Thread Only Variant/Normal World/Swamp Goomba",
+        "plank_plat (4)",
+        "Swamp Bounce Pod",
+        "moss_crumble_plat",
+        "Shakra Trail Quest Parent/Active/Tracking Trail (2)/Silhouettes Parent/Silhoutte",
+        "Mapper/Mapper_ambient_rings/rings/mapper extra rings/mapper rings/Mapper_Ring_world (3)"
+    ],
+    "shadow_04": [
+        "Swamp Mosquito (3)",
+        "GameObject/Surface Water Region"
+    ],
+    "hang_09": [
+        "Soft Waterfall Region",
+        "coral_river_chunk/particle_barrel_splash",
+        "coral_river_chunk/river_top/Base",
+        "coral_river_chunk/waterfall/Base"
+    ],
+    "shadow_12": [
+        "Swamp Muckman All Control/Swamp Muckman (4)",
+        "Swamp Muckman All Control/Swamp Muckman Tall Control/Activation Folder/Swamp Muckman Tall"
+    ],
+    "shadow_26": [
+        "Swamp Drifter",
+        "gloom_lift_destroy/gloom_lift_set/gloom_plat_lift destroy"
+    ],
+    "shadow_18": [
+        "Battle Scene/Wave 6 - Boss/Swamp Shaman",
+        "maggot_sack_break (1)",
+        "Battle Scene/stake_trap_swing_repeater",
+        "Battle Scene/Gates/Battle Gate Swamp"
+    ],
+    "shadow_10": [
+        "Swamp Stake Shooter Folder (1)/Swamp Stake Shooter",
+        "Spike Ball Folder/stake_trap_swing"
+    ],
+    "shadow_27": [
+        "Breakable Hang Sack 2"
+    ],
+    "dust_maze_01": [
+        "Wraith",
+        "Mist Maze Controller/Trap Sets/Trap Set/Dust Trap Spike Plate",
+        "Mist Maze Controller/Trap Sets/Trap Set/Dust Trap Spike Dropper",
+        "Mist Maze Controller/Trap Sets/Trap Set/Mite Trap"
+    ],
+    "organ_01": [
+        "Boss Scene/Phantom",
+        "Spike (7)",
+        "Organ_outer__0012_balcony_side_plat",
+        "GameObject (58)/metal_bridge (2)",
+        "organ_lift_broken_drop/lift_bottom_broken"
+    ],
+    "aqueduct_03": [
+        "Swamp Mosquito Skinny",
+        "Swamp Barnacle (1)",
+        "Swamp Ductsucker",
+        "waterways_particles (1)",
+        "Breakable Wall"
+    ],
+    "aqueduct_05_caravan": [
+        "Caravan_States/Fleatopia/Caravan Lech/Caravan Lech Wounded"
+    ],
+    "aqueduct_04": [
+        "Swamp Barnacle Slab Fly"
+    ],
+    "abyss_05": [
+        "Abyss Crawler (2)",
+        "Abyss Crawler Large (1)",
+        "abyss_plat_mid",
+        "abyss_plat_wide",
+        "Abyss Bounce Pod"
+    ],
+    "abyss_02b": [
+        "Gloom Beast"
+    ],
+    "memory_red": [
+        "Scenery Groups/End Scenery/White Palace Fly Red Memory (1)",
+        "Scenery Groups/Deepnest Scenery/Control Lever",
+        "Scenery Groups/Entry Scenery/memory_ground_plat (6)",
+        "thread_memory_region/web_particles (1)",
+        "Scenery Groups/Entry Scenery/red_memory_silk_pod0007 (15)",
+        "Scenery Groups/Hive Scenery/Hive_Break_01",
+        "Scenery Groups/Deepnest Scenery/plat_float_07",
+        "Scenery Groups/Deepnest Scenery/deepnest_platform_05",
+        "Scenery Groups/Deepnest Scenery/deepnest_platform_03",
+        "Scenery Groups/Deepnest Scenery/deepnest_platform_04",
+        "Scenery Groups/Deepnest Scenery/deepnest_platform_01",
+        "Scenery Groups/Hive Scenery/hive_plat_04 (1)",
+        "Scenery Groups/Hive Scenery/hive_plat_02",
+        "Scenery Groups/Hive Scenery/hive_plat_01"
+    ],
+    "clover_02c": [
+        "water_components_moss_short 1/caustic_small_000 (13)",
+        "grove_pod (1)/Clover Bounce Pod Activator",
+        "grove_pod (1)/Interactive Parent/Clover Bounce Pod (3)",
+        "Memory Orb Group/Clover_Statue_Break Orb",
+        "Grass Goomba",
+        "Lilypad Plat/Lilypad Fly"
+    ],
+    "tut_04": [
+        "States/Outro Scene/Snail_Shell_Small",
+        "States/Outro Scene/Snail_Shell_Mid",
+        "States/Outro Scene/Snail_Shell_Large"
+    ],
+    "song_04": [
+        "Black Thread States/Normal World/Scene States/Green Prince Stand Song_04"
+    ],
+    "clover_04b": [
+        "Lilypad Trap Setter/Lilypad Plat (1)",
+        "Battle Scene/Wave 3/Grasshopper Child (1)",
+        "Battle Scene/Return Scene/Grasshopper Slasher",
+        "Grasshopper Fly",
+        "break_grey_lamp_harp"
+    ],
+    "clover_06": [
+        "Cloverstag (2)",
+        "Group/Clover_Silk_Pod"
+    ],
+    "clover_21": [
+        "Group/clover_gate_outer_0000_1 (53)",
+        "Group/clover_gate_outer_0000_1 (54)",
+        "clover___0019_roof2_plat (5)"
+    ],
+    "clover_05c": [
+        "Hornet_pressure_plate_small_persistent",
+        "Clover Gate (1)",
+        "Hornet Dragonfly"
+    ],
+    "clover_18": [
+        "Dragonfly Large"
+    ],
+    "aqueduct_05_festival": [
+        "Caravan_States/Flea_Games_Start_effect/confetti_burst (1)",
+        "Flea Games Counter",
+        "Caravan_States/Flea Festival/Flea Game - Juggling/Flea Games Host NPC"
+    ],
+    "cradle_destroyed_challenge_01": [
+        "Cradle Challenge Pea Break",
+        "Centipede Trap Control/Centipede Trap",
+        "Spike Lazy Flyer"
+    ],
+    "abandoned_town": [
+        "plat_float_06",
+        "Surface Scuttler",
+        "collid"
+    ],
+    "cradle_destroyed_challenge_02": [
+        "Blade Spider",
+        "Blade Spider Hang"
+    ],
+    "bone_19": [
+        "Bone Chest",
+        "Breakable Wall"
+    ],
+    "song_03": [
+        "Chest Scene/Chest"
+    ],
+    "dock_06_church": [
+        "Black Thread States Thread Only Variant/Normal World/City Shard Chest"
+    ],
+    "under_08": [
+        "Understore Toll Bench (2)"
+    ],
+    "belltown_room_spare": [
+        "furnishings/bed/RestBench"
+    ],
+    "hang_06_bank": [
+        "rosary_cannon/Art/Rosary Cannon Scene/rosary_string_machine"
+    ],
+    "hang_06b": [
+        "new_scene/Reflection_surface"
+    ],
+    "ant_17": [
+        "Gilly"
+    ],
+    "library_09": [
+        "Black Thread States/Normal World/Scene Control/Garmond Scene/Garmond Fighter"
+    ],
+    "coral_33": [
+        "Black Thread States/Black Thread World/Garmond Scenes/Garmond Black Threaded Scene/Garmond Black Threaded Fighter"
+    ],
+    "hang_01": [
+        "Thread Spinner"
+    ],
+    "weave_04": [
+        "top set/Song_Gate_set (2)",
+        "Weaver Servitor (2)"
+    ],
+    "peak_04d": [
+        "Weaver Servitor Large"
+    ],
+    "weave_12": [
+        "weaver_lift_power_chamber/switches/Lever_Left"
+    ],
+    "greymoor_08_mapper": [
+        "Mapper Call Pole",
+        "Mapper Spar NPC"
+    ],
+    "hang_17b": [
+        "Boss Scene - To Additive Load/Song Knight"
+    ],
+    "bone_steel_servant": [
+        "Steel Servant Scene/Battle Scene/Wave 1/Abyss Mass"
+    ],
+    "song_19_entrance": [
+        "Black Thread States/Black Thread World/black_thread_strand"
+    ],
+    "greymoor_20c": [
+        "Crest Get Shrine"
+    ],
+    "song_15": [
+        "Black Thread States/Black Thread World/Black_Thread_Core_Citadel"
+    ],
+    "bone_01c": [
+        "bell_bench/frame/small_bell Parent",
+        "bell_bench/frame/Bell Main Parent"
+    ]
+}

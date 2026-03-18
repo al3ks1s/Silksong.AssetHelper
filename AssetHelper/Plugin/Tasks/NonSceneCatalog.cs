@@ -59,8 +59,10 @@ internal class NonSceneCatalog : BaseStartupTask
         bool shouldWriteCatalog = false;
 
         if (JsonExtensions.TryLoadFromFile(catalogMetadataPath, out NonSceneCatalogMetadata? existingCatalogData)
-            && existingCatalogData.SilksongVersion == VersionData.SilksongVersion
-            && VersionData.EarliestAcceptableNonSceneCatalogVersion.AllowCachedData(existingCatalogData.PluginVersion))
+            && existingCatalogData.Metadata != null
+            && existingCatalogData.Metadata.SilksongVersion == VersionData.SilksongVersion
+            && VersionData.EarliestAcceptableNonSceneCatalogVersion.AllowCachedData(existingCatalogData.Metadata.PluginVersion)
+            && existingCatalogData.Metadata.OSFolderName == AssetPaths.OSFolderName)
         {
             toCatalog = existingCatalogData.CatalogAssets;
         }

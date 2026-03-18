@@ -1,11 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <!-- 
   Imports silksong path properties only if present in order to allow CI builds. The file should be gitignored.
   If you are checking out from git and need to create a new one, you can use `dotnet new silksongpath` to generate one.
   -->
   <Import Condition="Exists('../SilksongPath.props')" Project="../SilksongPath.props" />
   <PropertyGroup>
-    <AssemblyTitle>AssetHelperMenu</AssemblyTitle>
+    <AssemblyTitle>AssetHelperTesting</AssemblyTitle>
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
@@ -17,23 +17,50 @@
     <!-- Shortens and anonymizes paths in debug symbols relative to the project directory. Breakpoints will not work, however. -->
     <PathMap Condition="'$(Configuration)' == 'Release'">$(MSBuildProjectDirectory)=/</PathMap>
 
-    <RepositoryUrl>https://github.com/silksong-modding/Silksong.AssetHelper</RepositoryUrl>
-    <IsPackable>False</IsPackable>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
-  
+
+  <PropertyGroup>
+    <ManagedFolder Condition="$(SilksongFolder) != ''">$(SilksongFolder)\Hollow Knight Silksong_Data\Managed</ManagedFolder>
+    <UseLocalRefs Condition="'$(Configuration)' == 'Debug' And Exists('$(ManagedFolder)')">true</UseLocalRefs>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources/*.json" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="BepInEx.Analyzers" Version="1.0.8" PrivateAssets="all" />
     <PackageReference Include="BepInEx.Core" Version="5.4.21" />
     <PackageReference Include="HarmonyX" Version="2.9.0" />
+    <PackageReference Include="Harmonize" Version="1.0.6" PrivateAssets="all" />
     <PackageReference Include="Hamunii.BepInEx.AutoPlugin" Version="2.1.0" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Unity.Analyzers" Version="1.26.0" PrivateAssets="all" />
+    <PackageReference Include="PolySharp" Version="1.15.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="UnityEngine.Modules" Version="6000.0.50" IncludeAssets="compile" />
-    <PackageReference Include="Silksong.GameLibs" Version="*-*" PrivateAssets="all" />
-    <PackageReference Include="Silksong.ModMenu" Version="0.4.4" />
+    <PackageReference Include="Silksong.UnityHelper" Version="1.1.1" />
+    <PackageReference Include="Silksong.FsmUtil" Version="0.3.14" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\AssetHelper\AssetHelper.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Silksong.GameLibs" Version="*-*" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="UnityEngine.Object" Alias="UObject" />
+    <Using Include="UnityEngine.SceneManagement.SceneManager" Alias="USceneManager" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MonoDetour.HookGen" Version="0.7.*" PrivateAssets="all" />
+    <PackageReference Include="MonoDetour" Version="*" />
   </ItemGroup>
 
   <Target Name="CopyAndPackageMod" AfterTargets="PostBuildEvent">
@@ -41,19 +68,9 @@
       <Binaries Include="$(TargetPath)" LocalDir="/" PackDir="/" />
       <Binaries Include="$(TargetDir)/$(TargetName).pdb" LocalDir="/" PackDir="/" />
     </ItemGroup>
-    <PropertyGroup>
-      <ThunderstoreDir>$(ProjectDir)/../thunderstore</ThunderstoreDir>
-    </PropertyGroup>
 
     <!-- Local install -->
     <Copy SourceFiles="@(Binaries)" DestinationFolder="$(SilksongPluginsFolder)/silksong_modding-$(AssemblyTitle)/%(Binaries.LocalDir)" Condition="'$(SilksongPluginsFolder)' != '' And Exists('$(SilksongPluginsFolder)')" />
 
-    <!-- Thunderstore packaging -->
-    <!-- Remove Thunderstore temp folder-->
-    <RemoveDir Directories="$(ThunderstoreDir)/menu_temp" />
-    <MakeDir Directories="$(ThunderstoreDir)/menu_temp" />
-    <Copy SourceFiles="@(Binaries)" DestinationFolder="$(ThunderstoreDir)/menu_temp/%(Binaries.PackDir)" />
-    <Exec Command="dotnet tool restore" />
-    <Exec Command="dotnet tcli build --config-path &quot;$(ThunderstoreDir)/assethelpermenu.toml&quot; --package-name &quot;$(AssemblyTitle)&quot; --package-version $(Version)" StandardOutputImportance="High" StandardErrorImportance="High" />
   </Target>
 </Project>

@@ -1,107 +1,43 @@
-﻿using AssetHelperLib.Repacking;
-using Silksong.AssetHelper.CatalogTools;
-using Silksong.AssetHelper.Internal;
-using AssetHelperLib.Util;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using AssetHelperLib.BundleTools;
+using AssetHelperLib.PreloadTable;
+using AssetHelperLib.Repacking;
 using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
-using RepackDataCollection = System.Collections.Generic.Dictionary<string, Silksong.AssetHelper.Plugin.RepackedSceneBundleData>;
 using Silksong.AssetHelper.Core;
-using AssetHelperLib.PreloadTable;
-using CPPCache = System.Collections.Generic.Dictionary<string, AssetHelperLib.PreloadTable.ContainerPointerPreloadsBundleData>;
-using System;
+using Silksong.AssetHelper.Internal;
 using Silksong.AssetHelper.Plugin.LoadingPage;
+using CPPCache = System.Collections.Generic.Dictionary<string, AssetHelperLib.PreloadTable.ContainerPointerPreloadsBundleData>;
+using GoInfo = AssetHelperLib.BundleTools.GameObjectLookup.GameObjectInfo;
+using RepackDataCollection = System.Collections.Generic.Dictionary<string, Silksong.AssetHelper.Plugin.RepackedSceneBundleData>;
 
 namespace Silksong.AssetHelper.Plugin.Tasks;
 
-/// <summary>
-/// Run the routine to repack scene assets, create a catalog and load it.
-/// </summary>
 internal class SceneRepacking : BaseStartupTask
 {
-    // Path to the scene catalog .bin file
     private static string SceneCatalogPath => Path.Combine(AssetPaths.CatalogFolder, $"{CatalogKeys.SceneCatalogId}.bin");
 
-    // (scene, gameObjs) that need to be repacked
-    private Dictionary<string, HashSet<string>> _toRepack = [];
+    private static string CatalogMetadataPath => Path.ChangeExtension(SceneCatalogPath, ".json");
 
     // Data about the repacked assets in the bundles on disk
     private RepackDataCollection _repackData = [];
 
-    private bool _didRepack = false;
-
     public override IEnumerator Run(ILoadingScreen loadingScreen)
     {
-        return RepackAndCatalogScenes(loadingScreen);
-    }
-
-    private IEnumerator RepackAndCatalogScenes(ILoadingScreen bar)
-    {
-        IEnumerator repack = PrepareAndRun(bar);
-
-        bar.SetText(LanguageKeys.REPACKING_SCENE.GetLocalized());
-        yield return null;
-
-        while (repack.MoveNext())
+        if (AssetRequestAPI.Request.SceneAssets.Count == 0)
         {
-            // Yield after each repack op is done
-            yield return null;
-        }
-        bar.Reset();
-
-        bar.SetText(LanguageKeys.BULDING_SCENE.GetLocalized());
-        yield return null;
-
-        IEnumerator catalogCreate = CreateSceneAssetCatalog(_repackData, bar);
-        while (catalogCreate.MoveNext())
-        {
-            yield return null;
+            AssetHelperPlugin.InstanceLogger.LogInfo("Not running scene repack operation: no scenes in request");
         }
 
-        yield return null;
-
-        // Only load the catalog if anyone's requested scene assets
-        if (_repackData.Count > 0)
-        {
-            bar.SetText(LanguageKeys.LOADING_SCENE.GetLocalized());
-            yield return null;
-
-            AssetHelperPlugin.InstanceLogger.LogInfo($"Loading scene catalog");
-            AsyncOperationHandle<IResourceLocator> catalogLoadOp = Addressables.LoadContentCatalogAsync(SceneCatalogPath);
-            yield return catalogLoadOp;
-            AssetRequestAPI.SceneAssetLocator = catalogLoadOp.Result;
-        }
-        yield return null;
-    }
-
-    private IEnumerator PrepareAndRun(ILoadingScreen bar)
-    {
-        Prepare();
-
-        if (_toRepack.Count > 0)
-        {
-            _didRepack = true;
-            return RunRepacking(bar);
-        }
-        else
-        {
-            return Enumerable.Empty<object>().GetEnumerator();
-        }
-    }
-
-    /// <summary>
-    /// Prepare the repacking request.
-    /// </summary>
-    /// <returns>True if there is any repacking to be done.</returns>
-    private void Prepare()
-    {
+        // Prepare operation
         if (JsonExtensions.TryLoadFromFile(AssetPaths.RepackedSceneBundleMetadataPath, out RepackDataCollection? repackData))
         {
             _repackData = repackData;
@@ -111,51 +47,314 @@ internal class SceneRepacking : BaseStartupTask
             _repackData = [];
         }
 
-        // Any data with a metadata mismatch should be removed from the dictionary
-        // Also remove data if they have manually deleted the file, as a way to individually
-        // reset scene data
+        // This block sets _repackData to include only the data for scenes that do not need to be repacked
         _repackData = _repackData
-            .Where(kvp => !MetadataMismatch(kvp.Key, kvp.Value) && File.Exists(GetBundlePathForScene(kvp.Key)))
+            // If some data is missing, we must repack
+            .Where(kvp => kvp.Value.CatalogInfo is not null && kvp.Value.Data is not null)
+            // If the metadata (plugin version, bundle hash) changes, we must repack
+            .Where(kvp => !MetadataMismatch(kvp.Key, kvp.Value))
+            // If the bundle does not exist, we must repack
+            .Where(kvp => File.Exists(GetBundlePathForScene(kvp.Key)))
+            // If the existing data does not support everything in the request, we repack
+            .Where(kvp => CanLoadAll(kvp.Value.CatalogInfo!, kvp.Key))
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-        _toRepack = [];
+        List<string> scenesToRepack;
 
-        foreach ((string scene, HashSet<string> request) in AssetRequestAPI.Request.SceneAssets)
+        // Repack scenes that need to be repacked
         {
-            if (!_repackData.TryGetValue(scene, out RepackedSceneBundleData existingBundleData))
+            loadingScreen.Reset();
+            loadingScreen.SetText(LanguageKeys.REPACKING_SCENE.GetLocalized());
+            yield return null;
+
+            CachedObject<CPPCache> SyncedCppCache = CachedObject<CPPCache>.CreateSynced(
+                "container_pointer_preloads_cache.json", () => new(), mutable: true, out IDisposable? cppSyncHandle);
+
+            ContainerPointerPreloads cpp = new(ResolveCab) { Cache = SyncedCppCache.Value };
+            PreloadTableResolver resolver = new([new DefaultPreloadTableResolver(), cpp]);
+            SceneRepacker repacker = new StrippedSceneRepacker(resolver);
+
+            scenesToRepack = AssetRequestAPI.Request.SceneAssets.Keys
+                .Where(x => !_repackData.ContainsKey(x))
+                .ToList();
+
+            Stopwatch mainSw = Stopwatch.StartNew();
+
+            int total = scenesToRepack.Count;
+            int count = 0;
+
+            AssetHelperPlugin.InstanceLogger.LogInfo($"Repacking {total} scenes");
+
+            foreach (string scene in scenesToRepack)
             {
-                _toRepack[scene] = request;
-                continue;
-            }
-            if (existingBundleData.Data is null)
-            {
-                _toRepack[scene] = request;
-                continue;
+                HashSet<string> request = AssetRequestAPI.Request.SceneAssets[scene];
+                Stopwatch sw = Stopwatch.StartNew();
+                AssetHelperPlugin.InstanceLogger.LogInfo($"Repacking {request.Count} objects in scene {scene}");
+                loadingScreen.SetSubtext(scene);
+
+                RepackedSceneBundleData sceneRepackData = DoRepack(scene, request, repacker);
+
+                sw.Stop();
+                _repackData[scene] = sceneRepackData;
+                // Serialize after each step so that interrupted operations can continue
+                _repackData.SerializeToFile(AssetPaths.RepackedSceneBundleMetadataPath);
+                AssetHelperPlugin.InstanceLogger.LogInfo($"Repacked {scene} in {sw.ElapsedMilliseconds} ms");
+
+                count += 1;
+                loadingScreen.SetProgress((float)count / (float)total);
+
+                yield return null;
             }
 
-            if (request.All(x => existingBundleData.Data.TriedToRepack(x)))
-            {
-                // No need to re-repack as there's nothing new to try
-                continue;
-            }
+            mainSw.Stop();
+            AssetHelperPlugin.InstanceLogger.LogInfo($"Finished scene repacking after {mainSw.ElapsedMilliseconds} ms");
 
-            // Include everything from the old bundle - perhaps this should be a config option?
-            _toRepack[scene] = new(request
-                .Union(existingBundleData.Data.GameObjectAssets?.Values ?? Enumerable.Empty<string>())
-                // I don't think we should try to repack failed assets unless they're re-requested
-                // .Union(existingBundleData.Data.NonRepackedAssets ?? Enumerable.Empty<string>())
-                );
+            loadingScreen.Reset();
+
+            // Save and dispose the cpp cache
+            cppSyncHandle?.Dispose();
+            yield return null;
         }
+
+        // Write catalog
+        // We can skip the catalog writing if nothing was freshly repacked
+        // and the catalog exists with the correct metadata.
+        {
+            bool shouldWriteCatalog = (scenesToRepack.Count > 0) || MustWriteCatalog();
+
+            if (shouldWriteCatalog)
+            {
+                loadingScreen.Reset();
+                loadingScreen.SetText(LanguageKeys.BULDING_SCENE.GetLocalized());
+                yield return null;
+
+                AssetHelperPlugin.InstanceLogger.LogInfo($"Creating catalog");
+                Stopwatch sw = Stopwatch.StartNew();
+
+                CustomCatalogBuilder cbr = new(CatalogKeys.SceneCatalogId);
+
+                foreach ((string scene, RepackedSceneBundleData data) in _repackData)
+                {
+                    if (data.Data == null || data.CatalogInfo == null) continue;
+                    string bundlePath = GetBundlePathForScene(scene);
+                    string bundleFileName = Path.GetFileName(bundlePath);
+                    string serializedBundlePath = $"{GetSerializedBundleDirPrefix()}/{bundleFileName}";
+
+                    cbr.AddRepackedSceneData(scene, data.Data, data.CatalogInfo, bundlePath, serializedBundlePath);
+                }
+                sw.Stop();
+                AssetHelperPlugin.InstanceLogger.LogInfo($"Prepared catalog in {sw.ElapsedMilliseconds} ms");
+
+                loadingScreen.SetText(LanguageKeys.WRITING_SCENE.GetLocalized());
+                loadingScreen.SetProgress(0);
+                yield return null;
+
+                sw = Stopwatch.StartNew();
+
+                int catCount = 0;
+                using IEnumerator<float> serializationRoutine = cbr.BuildRoutine();
+                while (serializationRoutine.MoveNext())
+                {
+                    float progress = serializationRoutine.Current;
+                    catCount++;
+                    if (catCount % 10 == 0)
+                    {
+                        loadingScreen.SetProgress(progress);
+                        yield return null;
+                    }
+                }
+
+                sw.Stop();
+                AssetHelperPlugin.InstanceLogger.LogInfo($"Finished writing catalog in {sw.ElapsedMilliseconds} ms");
+
+                SceneCatalogMetadata metadata = new();
+                metadata.SerializeToFile(CatalogMetadataPath);
+            }
+            else
+            {
+                AssetHelperPlugin.InstanceLogger.LogInfo($"Not creating catalog");
+            }
+        }
+
+        yield return null;
+
+        // Load catalog
+        loadingScreen.SetText(LanguageKeys.LOADING_SCENE.GetLocalized());
+        yield return null;
+
+        AssetHelperPlugin.InstanceLogger.LogInfo($"Loading scene catalog");
+        AsyncOperationHandle<IResourceLocator> catalogLoadOp = Addressables.LoadContentCatalogAsync(SceneCatalogPath);
+        yield return catalogLoadOp;
+        AssetRequestAPI.SceneAssetLocator = catalogLoadOp.Result;
+
+        yield return null;
     }
 
-    private static string GetSerializedBundleDirPrefix()
+    private RepackedSceneBundleData DoRepack(
+        string scene,
+        HashSet<string> request,
+        SceneRepacker repacker
+        )
     {
-        return $$"""{Silksong.{{nameof(AssetHelper)}}.Core.{{nameof(AssetPaths)}}.{{nameof(AssetPaths.RepackedSceneBundleDir)}}}""";
+        Dictionary<string, List<List<long>>> transformSeqs = null!;
+
+        string containerPrefix = $"{nameof(AssetHelper)}/{scene}";
+
+        RepackingParams rParams = new()
+        {
+            SceneBundlePath = AssetPaths.GetScenePath(scene),
+            ObjectNames = request.ToList(),
+            ContainerPrefix = containerPrefix,
+            OutBundlePath = GetBundlePathForScene(scene),
+            LateCallback = (ctx, data) => transformSeqs = BuildTransformSequences(ctx, data, request),
+        };
+        RepackedBundleData repackData = repacker.Repack(rParams);
+
+        string? hash = null;
+        if (AddressablesData.TryGetLocationForScene(scene, out IResourceLocation? location) && location.Data is AssetBundleRequestOptions opts)
+        {
+            hash = opts.Hash;
+        }
+
+        SceneCatalogInfo catInfo = BuildSceneCatalogInfo(repackData, transformSeqs, containerPrefix);
+
+        RepackedSceneBundleData sceneRepackData = new()
+        {
+            SceneName = scene,
+            BundleHash = hash,
+            Data = repackData,
+            CatalogInfo = catInfo,
+        };
+
+        return sceneRepackData;
     }
 
-    private static string GetBundlePathForScene(string sceneName)
+    private SceneCatalogInfo BuildSceneCatalogInfo(
+        RepackedBundleData repackData, Dictionary<string, List<List<long>>> transformSeqs, string containerPrefix)
     {
-        return Path.Combine(AssetPaths.RepackedSceneBundleDir, $"repacked_{sceneName}.bundle");
+        SceneCatalogInfo info = new();
+
+        HashSet<string> rootGos = repackData.GameObjectAssets?.Values.Distinct().ToHashSet() ?? [];
+        Dictionary<long, string> rootTransformPathIds = [];
+        foreach (string rootGo in rootGos)
+        {
+            foreach (List<long> transformSeq in transformSeqs[rootGo])
+            {
+                string containerPath = repackData.GameObjectAssets!
+                    .First(kvp => kvp.Key.StartsWith($"{containerPrefix}/{transformSeq[0]}") && kvp.Value == rootGo)
+                    .Key;
+                info.RootGameObjects.Add(new(rootGo, containerPath, transformSeq[0]));
+                rootTransformPathIds.Add(transformSeq[0], rootGo);
+            }
+        }
+        
+        foreach (string goPath in transformSeqs.Keys)
+        {
+            if (rootGos.Contains(goPath)) continue;
+
+            foreach (List<long> transformSeq in transformSeqs[goPath])
+            {
+                long ancestorPathId = transformSeq.FirstOrDefault(x => rootTransformPathIds.ContainsKey(x));
+                if (ancestorPathId == 0)
+                {
+                    throw new Exception($"Unexpectedly failed to find ancestor for {goPath} [{transformSeq[0]}]");
+                }
+                string ancestor = rootTransformPathIds[ancestorPathId];
+                if (!goPath.StartsWith(ancestor + "/"))
+                {
+                    throw new Exception($"Object {goPath} unexpectedly matched ancestor {ancestor}");
+                }
+                string relativePath = goPath.Substring(ancestor.Length + 1);
+
+                info.ChildGameObjects.Add(new(
+                    goPath,
+                    transformSeq[0],
+                    ancestor,
+                    relativePath,
+                    ancestorPathId
+                    ));
+            }
+        }
+
+        return info;
+    }
+
+    /// <summary>
+    /// For each game object path, compute all transform path sequences for that game object path.
+    /// 
+    /// A transform path sequence is a list of transform path IDs [id0, id1, ..., idn], where id0 is the
+    /// transform path id for the game object, id1 is its parent, ..., idn is the root.
+    /// 
+    /// The number of path sequences for each game object path will match the number of game objects with
+    /// that game object path.
+    /// </summary>
+    private Dictionary<string, List<List<long>>> BuildTransformSequences(
+        RepackingContext ctx, RepackedBundleData data, HashSet<string> request)
+    {
+        GameObjectLookup goLookup = ctx.GameObjLookup
+            ?? GameObjectLookup.CreateFromFile(ctx.SceneAssetsManager, ctx.MainAssetsFileInstance);
+
+        Dictionary<string, List<List<long>>> transformSeqs = [];
+
+        // We need to find transform sequences for all game objects in the request,
+        // and also all game objects in the bundle. The latter will only matter if there is a root game object
+        // in the repacked bundle that wasn't in the request, but has been included due to being a dependency
+        // for a requested asset.
+        HashSet<string> requiredPaths = [
+            .. request,
+            .. data.GameObjectAssets?.Values ?? Enumerable.Empty<string>()
+            ];
+
+        foreach (string objPath in requiredPaths)
+        {
+            List<List<long>> objTransformSeqs = [];
+            
+            if (!goLookup.TryLookupName(objPath, out List<GoInfo>? infos))
+            {
+                throw new Exception($"Failed to find {objPath} in bundle");
+            }
+
+            foreach (GoInfo info in infos)
+            {
+                GoInfo currentInfo = info;
+                List<long> tPathSeq = [];
+                long tPathId = currentInfo.TransformPathId;
+
+                tPathSeq.Add(tPathId);
+
+                while (currentInfo.ParentPathId != 0)
+                {
+                    currentInfo = goLookup.LookupTransform(currentInfo.ParentPathId);
+                    tPathSeq.Add(currentInfo.TransformPathId);
+                }
+
+                objTransformSeqs.Add(tPathSeq);
+            }
+
+            transformSeqs[objPath] = objTransformSeqs;
+        }
+
+        return transformSeqs;
+    }
+
+    private bool MustWriteCatalog()
+    {
+        if (!JsonExtensions.TryLoadFromFile(CatalogMetadataPath, out SceneCatalogMetadata? oldMeta)
+            || oldMeta.Metadata == null
+            || oldMeta.Metadata.SilksongVersion != VersionData.SilksongVersion
+            || !VersionData.EarliestAcceptableSceneRepackVersion.AllowCachedData(oldMeta.Metadata.PluginVersion)
+            || oldMeta.Metadata.OSFolderName != AssetPaths.OSFolderName
+            )
+        {
+            return true;
+        }
+
+        if (!File.Exists(SceneCatalogPath))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -163,14 +362,25 @@ internal class SceneRepacking : BaseStartupTask
     /// </summary>
     private static bool MetadataMismatch(string scene, RepackedSceneBundleData existingData)
     {
-        if (!VersionData.EarliestAcceptableSceneRepackVersion.AllowCachedData(existingData.PluginVersion))
+        if (existingData.Metadata == null)
+        {
+            return true;
+        }
+
+        if (!VersionData.EarliestAcceptableSceneRepackVersion.AllowCachedData(existingData.Metadata.PluginVersion))
         {
             // Mismatch: the version of the plugin used to repack needs to be after the last acceptable version.
             // We do not accept versions from the future.
             return true;
         }
 
-        if (existingData.SilksongVersion == VersionData.SilksongVersion)
+        if (existingData.Metadata.OSFolderName != AssetPaths.OSFolderName)
+        {
+            // Different OS strings mean the base game bundles may be different
+            return true;
+        }
+
+        if (existingData.Metadata.SilksongVersion == VersionData.SilksongVersion)
         {
             // If the Silksong version matches, then we're definitely fine.
             return false;
@@ -189,178 +399,59 @@ internal class SceneRepacking : BaseStartupTask
         return true;
     }
 
+    /// <summary>
+    /// Return true if the provided catalog info is capable of loading all assets requested
+    /// for the given scene.
+    /// </summary>
+    /// <param name="catalogInfo"></param>
+    /// <param name="sceneName"></param>
+    /// <returns></returns>
+    private bool CanLoadAll(SceneCatalogInfo catalogInfo, string sceneName)
+    {
+        HashSet<string> existingAssets = new(catalogInfo.LoadableAssets);
+
+        if (!AssetRequestAPI.Request.SceneAssets.TryGetValue(sceneName, out HashSet<string> requested))
+        {
+            // If nothing was requested, then certainly everything requested can be loaded.
+            return true;
+        }
+
+        return requested.IsSubsetOf(existingAssets);
+    }
+
+    private static string GetSerializedBundleDirPrefix()
+    {
+        return $$"""{Silksong.{{nameof(AssetHelper)}}.Core.{{nameof(AssetPaths)}}.{{nameof(AssetPaths.RepackedSceneBundleDir)}}}""";
+    }
+
+    private static string GetBundlePathForScene(string sceneName)
+    {
+        return Path.Combine(AssetPaths.RepackedSceneBundleDir, $"repacked_{sceneName}.bundle");
+    }
+
     private static bool ResolveCab(string cabName, out string? bundlePath)
     {
         bundlePath = null;
 
         if (cabName.Contains("unity"))
         {
-            // this isn't a game bundle (not a cab name) so we should skip
+            // This isn't a game bundle (not a cab name) so we should silently skip
             return true;
         }
 
         if (!BundleMetadata.CabLookup.TryGetValue(cabName.ToLowerInvariant(), out string? bundleName))
         {
+            // Surprisingly failed to resolve a cab, so we should ensure a warning is emitted
             return false;
         }
 
         if (bundleName.Contains("monoscripts") || bundleName.Contains("builtinassets"))
         {
-            // Skip these because we shouldn't follow any deps there
+            // Silently skip these because we shouldn't follow any deps there
             return true;
         }
 
         bundlePath = Path.Combine(AssetPaths.BundleFolder, bundleName);
         return true;
-    }
-
-    /// <summary>
-    /// Run the repacking procedure so that by the end, anything in the request which could be repacked has been.
-    /// </summary>
-    private IEnumerator RunRepacking(ILoadingScreen bar)
-    {
-        CachedObject<CPPCache> SyncedCppCache = CachedObject<CPPCache>.CreateSynced(
-            "container_pointer_preloads_cache.json", () => new(), mutable: true, out IDisposable? cppSyncHandle);
-
-        ContainerPointerPreloads cpp = new(ResolveCab) { Cache = SyncedCppCache.Value };
-        PreloadTableResolver resolver = new([new DefaultPreloadTableResolver(), cpp]);
-
-        SceneRepacker repacker = new StrippedSceneRepacker(resolver);
-
-        Stopwatch mainSw = Stopwatch.StartNew();
-
-        int total = _toRepack.Count;
-        int count = 0;
-
-        AssetHelperPlugin.InstanceLogger.LogInfo($"Repacking {_toRepack.Count} scenes");
-        foreach ((string scene, HashSet<string> request) in _toRepack)
-        {
-            Stopwatch sw = Stopwatch.StartNew();
-            AssetHelperPlugin.InstanceLogger.LogInfo($"Repacking {request.Count} objects in scene {scene}");
-            bar.SetSubtext(scene);
-
-            RepackingParams rParams = new()
-            {
-                SceneBundlePath = AssetPaths.GetScenePath(scene),
-                ObjectNames = request.ToList(),
-                ContainerPrefix = $"{nameof(AssetHelper)}/{scene}",
-                OutBundlePath = GetBundlePathForScene(scene),
-            };
-            RepackedBundleData repackData = repacker.Repack(rParams);
-
-            string? hash = null;
-            if (AddressablesData.TryGetLocationForScene(scene, out IResourceLocation? location) && location.Data is AssetBundleRequestOptions opts)
-            {
-                hash = opts.Hash;
-            }
-
-            RepackedSceneBundleData sceneRepackData = new()
-            {
-                SceneName = scene,
-                BundleHash = hash,
-                Data = repackData
-            };
-
-            _repackData[scene] = sceneRepackData;
-            _repackData.SerializeToFile(AssetPaths.RepackedSceneBundleMetadataPath);
-            AssetHelperPlugin.InstanceLogger.LogInfo($"Repacked {scene} in {sw.ElapsedMilliseconds} ms");
-
-            count++;
-            bar.SetProgress((float)count / (float)total);
-
-            yield return null;
-        }
-
-        mainSw.Stop();
-        AssetHelperPlugin.InstanceLogger.LogInfo($"Finished scene repacking after {mainSw.ElapsedMilliseconds} ms");
-
-        bar.Reset();
-        cppSyncHandle?.Dispose();
-    }
-
-    private IEnumerator CreateSceneAssetCatalog(RepackDataCollection data, ILoadingScreen screen)
-    {
-        string catalogMetadataPath = Path.ChangeExtension(SceneCatalogPath, ".json");
-
-        if (!_didRepack
-            && JsonExtensions.TryLoadFromFile(catalogMetadataPath, out SceneCatalogMetadata? oldMeta)
-            && oldMeta.SilksongVersion == VersionData.SilksongVersion
-            && VersionData.EarliestAcceptableSceneRepackVersion.AllowCachedData(oldMeta.PluginVersion)
-            )
-        {
-            // We can skip only if there's no change in the repacked bundles and no change to the version metadata
-            yield break;
-        }
-
-        AssetHelperPlugin.InstanceLogger.LogInfo($"Creating catalog");
-
-        Stopwatch sw = Stopwatch.StartNew();
-
-        CustomCatalogBuilder cbr = new(CatalogKeys.SceneCatalogId);
-        foreach ((string sceneName, RepackedSceneBundleData repackBunData) in data)
-        {
-            if (repackBunData.Data == null) continue;
-            string bundlePath = GetBundlePathForScene(sceneName);
-            string bundleFileName = Path.GetFileName(bundlePath);
-            string serializedBundlePath = $"{GetSerializedBundleDirPrefix()}/{bundleFileName}";
-            cbr.AddRepackedSceneData(sceneName, repackBunData.Data, bundlePath, serializedBundlePath);
-
-            // Add in requested child paths
-            if (AssetRequestAPI.Request.SceneAssets.TryGetValue(sceneName, out HashSet<string> requested))
-            {
-                foreach (string child in requested)
-                {
-                    if (!ObjPathUtil.TryFindAncestor(
-                        repackBunData.Data.GameObjectAssets?.Values.ToList(),
-                        child,
-                        out string? ancestorPath,
-                        out string? relativePath
-                        ))
-                    {
-                        AssetHelperPlugin.InstanceLogger.LogWarning($"Failed to find {child} in bundle for {sceneName} as loadable");
-                        continue;
-                    }
-                    if (string.IsNullOrEmpty(relativePath))
-                    {
-                        // Directly in bundle so no need to include as child
-                        continue;
-                    }
-
-                    string parentKey = CatalogKeys.GetKeyForSceneAsset(sceneName, ancestorPath);
-                    string childKey = CatalogKeys.GetKeyForSceneAsset(sceneName, child);
-                    ContentCatalogDataEntry entry = CatalogEntryUtils.CreateChildGameObjectEntry(parentKey, relativePath, childKey);
-                    cbr.AddCatalogEntry(entry);
-                }
-            }
-        }
-
-        sw.Stop();
-        AssetHelperPlugin.InstanceLogger.LogInfo($"Prepared catalog in {sw.ElapsedMilliseconds} ms");
-
-        screen.SetText(LanguageKeys.WRITING_SCENE.GetLocalized());
-        yield return null;
-
-        sw = Stopwatch.StartNew();
-
-        int count = 0;
-        using IEnumerator<float> serializationRoutine = cbr.BuildRoutine();
-        while (serializationRoutine.MoveNext())
-        {
-            float progress = serializationRoutine.Current;
-            count++;
-            if (count%10 == 0)
-            {
-                screen.SetProgress(progress);
-                yield return null;
-            }
-        }
-
-        sw.Stop();
-        AssetHelperPlugin.InstanceLogger.LogInfo($"Finished writing catalog in {sw.ElapsedMilliseconds} ms");
-
-        SceneCatalogMetadata metadata = new();
-        metadata.SerializeToFile(catalogMetadataPath);
-
-        yield return null;
     }
 }

@@ -1,23 +1,23 @@
 ﻿using AssetHelperLib.Repacking;
+using Newtonsoft.Json;
 using Silksong.AssetHelper.Internal;
+using Silksong.AssetHelper.Plugin.Tasks;
+using System.ComponentModel;
 
 namespace Silksong.AssetHelper.Plugin;
 
 /// <summary>
 /// Data about a repacked scene bundle used by AssetHelper.
 /// </summary>
-public sealed class RepackedSceneBundleData
+internal sealed class RepackedSceneBundleData
 {
     /// <summary>
-    /// The Silksong version used to create the bundle.
+    /// The metadata when creating the bundle.
     /// </summary>
-    public string SilksongVersion { get; init; } = VersionData.SilksongVersion;
-
-    /// <summary>
-    /// The Asset Helper version used to create the bundle.
-    /// </summary>
-    public string PluginVersion { get; init; } = AssetHelperPlugin.Version;
-
+    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+    [DefaultValue(null)]
+    public CachedFileMetadata Metadata { get; init; } = CachedFileMetadata.CreateNew();
+    
     /// <summary>
     /// The name of the scene used to generate the bundle.
     /// </summary>
@@ -32,4 +32,9 @@ public sealed class RepackedSceneBundleData
     /// The data generated for the repacked bundle.
     /// </summary>
     public RepackedBundleData? Data { get; set; } = null;
+
+    /// <summary>
+    /// Info used to build the catalog entries for the repacked bundle.
+    /// </summary>
+    public SceneCatalogInfo? CatalogInfo { get; set; } = null;
 }

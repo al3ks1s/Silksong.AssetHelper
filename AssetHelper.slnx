@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="AssetHelper/AssetHelper.csproj" />
   <Project Path="AssetHelperMenu/AssetHelperMenu.csproj" Id="2109f991-85c6-4e05-881e-59bf10836ab0" />
+  <Project Path="AssetHelperTesting/AssetHelperTesting.csproj" Id="eef3b27f-b627-48da-b2bf-45e0eba05226" />
 </Solution>

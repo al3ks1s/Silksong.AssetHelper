@@ -14,9 +14,6 @@
     <RootNamespace>Silksong.AssetHelper</RootNamespace>
     <!-- Ignore warning about processor architecture mismatch with PlayMaker ConditionalExpression -->
     <NoWarn>$(NoWarn);MSB3270</NoWarn>
-    <RestorePackagesWithLockFile>True</RestorePackagesWithLockFile>
-    <!-- CI environment variable is automatically set by GitHub actions -->
-    <RestoreLockedMode Condition="'$(CI)' == 'true'">True</RestoreLockedMode>
     <!-- Allow access of private members at runtime -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- Shortens and anonymizes paths in debug symbols relative to the project directory. Breakpoints will not work, however. -->
@@ -41,7 +38,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="UnityEngine.Modules" Version="6000.0.50" IncludeAssets="compile" />
-    <PackageReference Include="DataDrivenConstants" Version="1.1.0">
+    <PackageReference Include="DataDrivenConstants" Version="1.2.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
@@ -72,8 +69,31 @@
 
   <ItemGroup>
     <PackageReference Include="AssetsTools.NET" Version="3.0.4" GeneratePathProperty="true" />
-    <PackageReference Include="AssetHelperLib" Version="0.11.0" GeneratePathProperty="true" />
   </ItemGroup>
+
+  <!--AssetHelperLib dependency-->
+  <PropertyGroup>
+    <!--
+    Set this to true to use a local copy of AssetHelperLib for development.
+    This should be false when pushed to main.
+    -->
+    <AssetHelperLibDevelopment>false</AssetHelperLibDevelopment>
+    <AssetHelperLibFolder>../../AssetHelperLib/AssetHelperLib/bin/Debug/netstandard2.1</AssetHelperLibFolder>
+  </PropertyGroup>
+  
+  <ItemGroup Condition="'$(AssetHelperLibDevelopment)' == 'false'">
+    <PackageReference Include="AssetHelperLib" Version="0.12.1" GeneratePathProperty="true" />
+  </ItemGroup>
+  
+  <ItemGroup Condition="'$(AssetHelperLibDevelopment)' == 'true'">
+    <Reference Include="AssetHelperLib">
+      <HintPath>$(AssetHelperLibFolder)/AssetHelperLib.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(AssetHelperLibDevelopment)' == 'false'">
+    <AssetHelperLibFolder>$(PkgAssetHelperLib)/lib/netstandard2.1</AssetHelperLibFolder>
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="MonoDetour.HookGen" Version="0.7.*" PrivateAssets="all" />
@@ -101,8 +121,8 @@
       <Binaries Include="$(TargetDir)/$(TargetName).xml" LocalDir="/" PackDir="plugins" />
       <Binaries Include="$(PkgAssetsTools_NET)/lib/netstandard2.0/AssetsTools.NET.dll" PackDir="plugins" />
       <Binaries Include="$(PkgAssetsTools_NET)/lib/netstandard2.0/AssetsTools.NET.xml" PackDir="plugins" />
-      <Binaries Include="$(PkgAssetHelperLib)/lib/netstandard2.1/AssetHelperLib.dll" PackDir="plugins" />
-      <Binaries Include="$(PkgAssetHelperLib)/lib/netstandard2.1/AssetHelperLib.xml" PackDir="plugins" />
+      <Binaries Include="$(AssetHelperLibFolder)/AssetHelperLib.dll" PackDir="plugins" />
+      <Binaries Include="$(AssetHelperLibFolder)/AssetHelperLib.xml" PackDir="plugins" />
       <Binaries Include="languages/*.json" LocalDir="languages" PackDir="plugins/languages" />
     </ItemGroup>
     <PropertyGroup>
@@ -110,24 +130,13 @@
     </PropertyGroup>
 
     <!-- Local install -->
-    <Copy
-      SourceFiles="@(Binaries)"
-      DestinationFolder="$(SilksongPluginsFolder)/silksong_modding-$(AssemblyTitle)/%(Binaries.LocalDir)"
-      Condition="'$(SilksongPluginsFolder)' != '' And Exists('$(SilksongPluginsFolder)')"
-    />
+    <Copy SourceFiles="@(Binaries)" DestinationFolder="$(SilksongPluginsFolder)/silksong_modding-$(AssemblyTitle)/%(Binaries.LocalDir)" Condition="'$(SilksongPluginsFolder)' != '' And Exists('$(SilksongPluginsFolder)')" />
 
     <!-- Thunderstore packaging -->
     <RemoveDir Directories="$(ThunderstoreDir)/temp;$(ThunderstoreDir)/dist" />
     <MakeDir Directories="$(ThunderstoreDir)/temp" />
-    <Copy
-      SourceFiles="@(Binaries)"
-      DestinationFolder="$(ThunderstoreDir)/temp/%(Binaries.PackDir)"
-    />
+    <Copy SourceFiles="@(Binaries)" DestinationFolder="$(ThunderstoreDir)/temp/%(Binaries.PackDir)" />
     <Exec Command="dotnet tool restore" />
-    <Exec
-      Command="dotnet tcli build --config-path &quot;$(ThunderstoreDir)/assethelper.toml&quot; --package-name &quot;$(AssemblyTitle)&quot; --package-version $(Version)"
-      StandardOutputImportance="High"
-      StandardErrorImportance="High"
-    />
+    <Exec Command="dotnet tcli build --config-path &quot;$(ThunderstoreDir)/assethelper.toml&quot; --package-name &quot;$(AssemblyTitle)&quot; --package-version $(Version)" StandardOutputImportance="High" StandardErrorImportance="High" />
   </Target>
 </Project>

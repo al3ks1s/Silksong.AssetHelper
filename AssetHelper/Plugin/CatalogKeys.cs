@@ -40,4 +40,16 @@ public static class CatalogKeys
     {
         return $"{NonSceneCatalogId}/{assetName}";
     }
+
+    /// <summary>
+    /// Get the primary key for a scene bundle asset with a particular transform path ID.
+    /// </summary>
+    /// <remarks>
+    /// This is essentially a secondary primary key for the asset, guaranteed to be unique,
+    /// but not intended to be used by clients.
+    /// </remarks>
+    internal static string GetKeyForAssetAtTransform(string sceneName, long tPathId)
+    {
+        return $"{SceneCatalogId}/RepackedTransforms/{sceneName}/t{tPathId}.prefab";
+    }
 }
