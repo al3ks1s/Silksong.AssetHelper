@@ -65,6 +65,7 @@ internal class SceneRepacking : BaseStartupTask
         {
             loadingScreen.Reset();
             loadingScreen.SetText(LanguageKeys.REPACKING_SCENE.GetLocalized());
+            yield return null;
 
             CachedObject<CPPCache> SyncedCppCache = CachedObject<CPPCache>.CreateSynced(
                 "container_pointer_preloads_cache.json", () => new(), mutable: true, out IDisposable? cppSyncHandle);
