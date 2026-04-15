@@ -1,7 +1,8 @@
-﻿using System;
+﻿using HutongGames.PlayMaker.Actions;
+using Silksong.AssetHelper.Plugin;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Silksong.AssetHelper.Plugin;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -104,7 +105,7 @@ public class ManagedAssetGroup<T> : IManagedAsset
                     if (!AssetRequestAPI.Request.NonSceneAssets.ContainsKey((asset.BundleName, asset.AssetName)))
                     {
                         AssetHelperPlugin.InstanceLogger.LogWarning(
-                            $"Constructing managed asset from non-scene bundle {asset.BundleName}, {asset.AssetName} after Awake may not work unless the asset has been requested first!");
+                            $"Constructing managed asset {asset.AssetName} from non-scene bundle {asset.BundleName} after Awake may not work unless the asset has been requested first!");
                     }
                 }
 
