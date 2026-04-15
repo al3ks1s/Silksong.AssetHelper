@@ -79,7 +79,8 @@ public class ManagedAsset<T>(string key) : ManagedAssetBase<T>
         }
         else
         {
-            if (!string.IsNullOrEmpty(bundleName)) { 
+            if (!string.IsNullOrEmpty(bundleName)) 
+            { 
                 if (!AssetRequestAPI.Request.NonSceneAssets.TryGetValue((bundleName, assetName), out Type _))
                 {
                     AssetHelperPlugin.InstanceLogger.LogWarning(

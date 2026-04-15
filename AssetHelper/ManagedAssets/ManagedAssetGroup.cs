@@ -95,7 +95,6 @@ public class ManagedAssetGroup<T> : IManagedAsset
         {
             foreach ((string name, NonSceneAssetInfo asset) in nonSceneAssets)
             {
-
                 if (AssetRequestAPI.RequestApiAvailable)
                 {
                     AssetRequestAPI.RequestNonSceneAsset<T>(asset.BundleName, asset.AssetName);
