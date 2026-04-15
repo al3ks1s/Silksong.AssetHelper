@@ -81,17 +81,16 @@ public class ManagedAsset<T>(string key) : ManagedAssetBase<T>
         {
             if (!string.IsNullOrEmpty(bundleName)) 
             { 
-                if (!AssetRequestAPI.Request.NonSceneAssets.TryGetValue((bundleName, assetName), out Type _))
+                if (!AssetRequestAPI.Request.NonSceneAssets.ContainsKey((bundleName, assetName)))
                 {
                     AssetHelperPlugin.InstanceLogger.LogWarning(
-                        $"Constructing managed asset from non-scene bundle {bundleName}, {assetName} after Awake may not work unless the asset has been requested first!");
+                        $"Constructing managed asset {assetName} from non-scene bundle {bundleName} after Awake may not work unless the asset has been requested first!");
                 }
             } 
-            else
-            {
-                AssetHelperPlugin.InstanceLogger.LogWarning(
-                    $"Constructing managed asset {assetName} from non-scene bundle will not work if the bundle name is not provided or the asset has not been previously requested!");
-            }
+
+            // Other cases are not logged as it could lead to false positives.
+            // Ensure the bundleName is included in the request if you want its assets catalogued
+
         }
 
         string key = CatalogKeys.GetKeyForNonSceneAsset(assetName);

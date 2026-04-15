@@ -101,7 +101,7 @@ public class ManagedAssetGroup<T> : IManagedAsset
                 }
                 else
                 {
-                    if (!AssetRequestAPI.Request.NonSceneAssets.TryGetValue((asset.BundleName, asset.AssetName), out Type _))
+                    if (!AssetRequestAPI.Request.NonSceneAssets.ContainsKey((asset.BundleName, asset.AssetName)))
                     {
                         AssetHelperPlugin.InstanceLogger.LogWarning(
                             $"Constructing managed asset from non-scene bundle {asset.BundleName}, {asset.AssetName} after Awake may not work unless the asset has been requested first!");

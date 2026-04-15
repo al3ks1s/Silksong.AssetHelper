@@ -79,7 +79,7 @@
     -->
     <AssetHelperLibDevelopment>false</AssetHelperLibDevelopment>
     <AssetHelperLibFolder>../../AssetHelperLib/AssetHelperLib/bin/Debug/netstandard2.1</AssetHelperLibFolder>
-    <Version>1.3.2</Version>
+    <Version>1.3.1</Version>
   </PropertyGroup>
   
   <ItemGroup Condition="'$(AssetHelperLibDevelopment)' == 'false'">
